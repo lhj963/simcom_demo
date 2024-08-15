@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "atcontrol.h": "c",
+        "errno.h": "c",
+        "mcu.h": "c",
+        "gpiocontrol.h": "c",
+        "DBG.C": "cpp",
+        "getopt.h": "c",
+        "input.h": "c",
+        "ledcontrol.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+}
