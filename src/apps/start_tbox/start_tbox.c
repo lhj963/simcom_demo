@@ -901,6 +901,8 @@ void *autosleep_proc(void *arg)
 	{
 		char rbuff[3] = {0};
 		int lvalue = 0;
+		unsigned long s_check_dbgfile_time = get_run_time();
+
 		ret = lseek(fd, (off_t)0, SEEK_SET);
 		ret += read(fd, rbuff, 3);
 		lvalue = atoi(rbuff);
@@ -913,6 +915,16 @@ void *autosleep_proc(void *arg)
 			autosleep_enable(0);
 		}
 		// DBG_Print(LEVEL0, "autosleep_proc:%d ,time:%u\n", lvalue, get_run_time());
+		if ((get_run_time() - s_check_dbgfile_time) >= 60 * 60 * 4)
+		{
+			if (mygetfilesize("/data/dbg.txt") > (1024 * 100))
+			{
+				system("rm -rf /data/dbg.txt");
+				DBG_Print(LEVEL0, "%s", "dbg too large.del it\r\n");
+			}
+			s_check_dbgfile_time = get_run_time();
+		}
+
 		sleep(2);
 	}
 	close(fd);
@@ -1722,7 +1734,7 @@ void start_tbox(void)
 	jmrh_init(jmrh_jiami);
 	reg_jmrh_ota_cb_func(jmrh_ota_cb);
 
-	Set_DBG_Level(LEVEL3);
+	Set_DBG_Level(LEVEL1);
 	DBG_Init(0, 0, 0, 0, dbg_create_sem, dbg_wait_sem, dbg_post_sem, dbg_send, 0);
 	DBG_Print(LEVEL0, "Software:%s Compile @ %s %s\r\n", SOFTWARE_VERSION, __DATE__, __TIME__);
 
