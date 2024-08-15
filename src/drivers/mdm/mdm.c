@@ -7,21 +7,14 @@ int update_sim_info_proc(void)
 {
     char imei[32] = {0};
     char iccid[32] = {0};
-    // char imsi[33] = {0};
-    // char meid[32] = {0};
-    // char phone_num[32] = {0};
 
     if (strlen(get_imei_ptr()) < 3)
     {
         memset(imei, 0, 32);
         getIMEI(imei, 32);
-        DBG_Print(LEVEL2, "2IMEI:%s!!!\r\n", imei);
         if (is_string(imei, strlen(imei)))
             set_imei(imei, strlen(imei));
     }
-
-    // memset(phone_num, 0, sizeof(phone_num));
-    // query_SIM_number(phone_num);
 
     if (strlen(get_iccid_ptr()) < 3)
     {
@@ -42,8 +35,6 @@ int update_sim_info_proc(void)
             }
         } while (i < 5);
     }
-    // get_imsi(imsi);
-
     return 0;
 }
 

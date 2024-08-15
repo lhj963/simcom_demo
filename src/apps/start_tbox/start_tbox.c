@@ -1716,8 +1716,6 @@ void start_tbox(void)
 	pthread_t at_tid;
 	pthread_t autosleep_tid;
 
-	// time_t current_time;
-
 	install_signal_handler();
 
 	hj1239_proc_init(get_sign);
