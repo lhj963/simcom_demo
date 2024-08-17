@@ -397,7 +397,7 @@ void *tcp_connect_thread(void *parg)
                         sleep(2);
                         DBG_Print(LEVEL2, "4start connect[%d],time:%u\n", channel, (unsigned int)get_run_time());
                         DBG_Print(LEVEL2, "<server%u:%s:%u %s (%u)> \r\n", channel, sysparam_get_serveraddr(channel), sysparam_get_serverport(channel),
-                        // get_server_connect_status(channel) ? "connected" : "disconnect", get_blind_data_cnt(channel));
+                                  get_server_connect_status(channel) ? "connected" : "disconnect", get_blind_data_cnt(channel));
                         last_connect_tcp_time[channel] = get_run_time();
                         // s_socketfd[channel] = unblock_connect(sysparam_get_serveraddr(channel),sysparam_get_serverport(channel),25);
                         s_socketfd[channel] = ls_poc_create_tcp_connect(sysparam_get_serveraddr(channel), sysparam_get_serverport(channel));
