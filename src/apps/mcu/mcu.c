@@ -2040,7 +2040,6 @@ void send_heartbeat_to_mcu(void)
 		ptr[xlen++] = templen >> 8;
 		ptr[xlen++] = templen;
 	}
-	// DBG_Print(LEVEL0, "get_mpu_status1 %d\r\n", get_mpu_status1());
 	send_msg_to_mcu(TCCP_MPU_HEAT_MSG_ID, ptr, xlen);
 }
 

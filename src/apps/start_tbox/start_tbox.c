@@ -914,7 +914,6 @@ void *autosleep_proc(void *arg)
 		{
 			autosleep_enable(0);
 		}
-		// DBG_Print(LEVEL0, "autosleep_proc:%d ,time:%u\n", lvalue, get_run_time());
 		if ((get_run_time() - s_check_dbgfile_time) >= 60 * 60 * 4)
 		{
 			if (mygetfilesize("/data/dbg.txt") > (1024 * 100))
@@ -928,7 +927,7 @@ void *autosleep_proc(void *arg)
 		sleep(2);
 	}
 	close(fd);
-	DBG_Print(LEVEL0, "DTR interrupt exit ok\n");
+	DBG_Print(LEVEL2, "DTR interrupt exit ok\n");
 	return ((void *)0);
 }
 
@@ -1440,7 +1439,7 @@ void gb32960_deal(INT8U cmd, INT8U ack_flag, void *pvin, INT8U jiami_way, void *
 		INT8U ack_time[6] = {0};
 		INT8U slen = 0;
 
-		DBG_Print(LEVEL0, "SMS智能座舱控制命令时间:%02X %02X %02X %02X %02X %02X\r\n命令ID:%02X\r\n",
+		DBG_Print(LEVEL2, "SMS智能座舱控制命令时间:%02X %02X %02X %02X %02X %02X\r\n命令ID:%02X\r\n",
 				  ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6]);
 
 		switch (ptr[6]) // 命令ID
@@ -1452,18 +1451,18 @@ void gb32960_deal(INT8U cmd, INT8U ack_flag, void *pvin, INT8U jiami_way, void *
 			}
 			else
 			{
-				DBG_Print(LEVEL0, "Do NOT find DFAC#WakeUp#tBox \r\n");
+				DBG_Print(LEVEL2, "Do NOT find DFAC#WakeUp#tBox \r\n");
 			}
 
 			break;
 		default:
-			DBG_Print(LEVEL0, "Do NOT find cmd SMS wake up \r\n");
+			DBG_Print(LEVEL2, "Do NOT find cmd SMS wake up \r\n");
 			break;
 		}
 	}
 	break;
 	default:
-		DBG_Print(LEVEL0, "Do NOT find cmd TSP CMD 0xA5 \r\n");
+		DBG_Print(LEVEL2, "Do NOT find cmd TSP CMD 0xA5 \r\n");
 		break;
 	}
 }
@@ -1528,7 +1527,7 @@ void gb32960_ack_plat(void *pdat, unsigned int len)
 		}
 		xor = *(phead + GB32960_CONTENT_OFFSET + contentlen);
 
-		DBG_Print(LEVEL0, "-------------GB32960 sms ack-------\r\n"
+		DBG_Print(LEVEL2, "-------------GB32960 sms ack-------\r\n"
 						  "cmd:%02X ack:%02X vin:%s jiami:%02X dataunitlen:%d xor:%02X\r\n",
 				  cmd, ack_flag, pvin, jiami_way, contentlen, xor);
 		if (strstr((char *)(phead), sysparam_get_vin()))
@@ -1537,7 +1536,7 @@ void gb32960_ack_plat(void *pdat, unsigned int len)
 		}
 		else
 		{
-			DBG_Print(LEVEL0, " VIN is ERROR.true_vin:%s\r\n", sysparam_get_vin());
+			DBG_Print(LEVEL2, " VIN is ERROR.true_vin:%s\r\n", sysparam_get_vin());
 		}
 		ptr = phead + GB32960_CONTENT_OFFSET + contentlen + 1;
 		len -= (GB32960_CONTENT_OFFSET + contentlen + 1);

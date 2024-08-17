@@ -373,13 +373,10 @@ void *tcp_connect_thread(void *parg)
 
     while (1)
     {
-        // DBG_Print(LEVEL0, "1start connect[%d]\n", channel);
         if (get_ppp_status(0))
         {
-            // DBG_Print(LEVEL0, "2start connect[%d]\n", channel);
             for (channel = 0; channel < 7; channel++)
             {
-                // DBG_Print(LEVEL0, "3start connect[%d]\n", channel);
                 if (get_server_change_flag(channel))
                 {
                     if (s_socketfd[channel] > 0)
@@ -398,13 +395,13 @@ void *tcp_connect_thread(void *parg)
                     if ((get_run_time() - last_connect_tcp_time[channel]) >= connect_time_threshold[channel])
                     {
                         sleep(2);
-                        // DBG_Print(LEVEL0, "4start connect[%d],time:%u\n", channel, (unsigned int)get_run_time());
-                        // DBG_Print(LEVEL0, "<server%u:%s:%u %s (%u)> \r\n", channel, sysparam_get_serveraddr(channel), sysparam_get_serverport(channel),
+                        DBG_Print(LEVEL2, "4start connect[%d],time:%u\n", channel, (unsigned int)get_run_time());
+                        DBG_Print(LEVEL2, "<server%u:%s:%u %s (%u)> \r\n", channel, sysparam_get_serveraddr(channel), sysparam_get_serverport(channel),
                         // get_server_connect_status(channel) ? "connected" : "disconnect", get_blind_data_cnt(channel));
                         last_connect_tcp_time[channel] = get_run_time();
                         // s_socketfd[channel] = unblock_connect(sysparam_get_serveraddr(channel),sysparam_get_serverport(channel),25);
                         s_socketfd[channel] = ls_poc_create_tcp_connect(sysparam_get_serveraddr(channel), sysparam_get_serverport(channel));
-                        // DBG_Print(LEVEL0, "end connect[%d][socket:%d],time:%u\n", channel, s_socketfd[channel], (unsigned int)get_run_time());
+                        DBG_Print(LEVEL2, "end connect[%d][socket:%d],time:%u\n", channel, s_socketfd[channel], (unsigned int)get_run_time());
                         if (s_socketfd[channel] > 0)
                         {
                             set_server_connect_status(channel, 1);
@@ -435,14 +432,13 @@ void *tcp_connect_special_thread(void *parg)
     unsigned long last_connect_tcp_time[9] = {0};
     while (1)
     {
-        DBG_Print(LEVEL0, "tcp_connect_special_thread,PPP:%d \r\n", get_ppp_status(0));
         if (get_ppp_status(0))
         {
 
             sleep(2);
             for (channel = 7; channel < 9; channel++)
             {
-                DBG_Print(LEVEL0, "tcp_connect_special_thread,channel:%d,status:%d \r\n", channel, get_server_connect_status(channel));
+                DBG_Print(LEVEL2, "tcp_connect_special_thread,channel:%d,status:%d \r\n", channel, get_server_connect_status(channel));
                 if (get_server_change_flag(channel))
                 {
                     if (s_socketfd[channel] > 0)
@@ -462,7 +458,7 @@ void *tcp_connect_special_thread(void *parg)
                     {
                         sleep(2);
                         last_connect_tcp_time[channel] = get_run_time();
-                        DBG_Print(LEVEL0, "<server%u:%s:%u %s (%u)> \r\n", channel, sysparam_get_serveraddr(channel), sysparam_get_serverport(channel),
+                        DBG_Print(LEVEL2, "<server%u:%s:%u %s (%u)> \r\n", channel, sysparam_get_serveraddr(channel), sysparam_get_serverport(channel),
                                   get_server_connect_status(channel) ? "connected" : "disconnect", get_blind_data_cnt(channel));
                         // s_socketfd[channel] = unblock_connect(sysparam_get_serveraddr(channel),sysparam_get_serverport(channel),25);
                         s_socketfd[channel] = ls_poc_create_tcp_connect(sysparam_get_serveraddr(channel), sysparam_get_serverport(channel));
@@ -536,7 +532,7 @@ void *tcp_send_thread(void *parg)
                             s_socketfd[channel] = -1;
                             send_offline_msg_to_mcu(channel);
 
-                            DBG_Print(LEVEL0, "server_connect_status disconnect channel[%d]", channel);
+                            DBG_Print(LEVEL2, "server_connect_status disconnect channel[%d]", channel);
 
                             if (channel != 4)
                                 create_blind_file(channel, p_send_buffer, send_length);

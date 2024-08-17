@@ -29,12 +29,12 @@ pthread_mutex_t channel_mutex[9];
 
 int main(int argc, char *argv[])
 {
+    int ret;
     int i = 0;
-
     init_data_buffer();
     SimcomUbusInit();
     atctrl_init();
-
+    set_gain_NITZtime_enable(1);
     for (i = 0; i < 9; i++)
     {
         pthread_mutex_init(&(channel_mutex[i]), NULL);

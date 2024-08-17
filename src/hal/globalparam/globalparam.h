@@ -6,12 +6,12 @@ extern "C"
 {
 #endif
 
-#define __CWJH_PLAT__ 0
+#define __CWJH_PLAT__ 1
 #define __DST_PLAT__ 0
 #define __DF_HJ_PLAT__ 0
 #define __EH43_PLAT__ 0
 #define __SDDF_PLAT__ 0
-#define __CN6_PLAT__ 1
+#define __CN6_PLAT__ 0
 
 #if __CWJH_PLAT__
 #define SOFTWARE_VERSION "BYSD_Z2021_MPU_V5.1.47"

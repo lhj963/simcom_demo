@@ -7,7 +7,8 @@
         "DBG.C": "cpp",
         "getopt.h": "c",
         "input.h": "c",
-        "ledcontrol.h": "c"
+        "ledcontrol.h": "c",
+        "globalparam.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

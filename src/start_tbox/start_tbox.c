@@ -568,10 +568,7 @@ void write_ssid(char *ssid_tmp)
 	}
 
 	ret = set_ssid_plus(ssid, ap_index, freq);
-	if (ret)
-	{
-	}
-	else
+	if (!ret)
 	{
 		DBG_Print(LEVEL0, "\nset SSID:%s failed!\n", ssid);
 	}
@@ -606,10 +603,7 @@ void write_pwd_str(char *pwd_str_tmp)
 	memcpy(pwd_str, pwd_str_tmp, strlen(pwd_str_tmp));
 
 	ret = set_auth_plus(pwd_str, auth_type, encrypt_mode, ap_index, freq);
-	if (ret)
-	{
-	}
-	else
+	if (!ret)
 	{
 		DBG_Print(LEVEL0, "\nset AUTH:%s failed!\n", pwd_str);
 	}

@@ -57,6 +57,8 @@ void ql_qcmapclient_sighandler(int signal)
 
 void auto_ppp_proc(void)
 {
+    int ret;
+    unsigned char *pt = 0;
     if (get_ppp_status(0) == 0)
     {
         int rlen = exe_system_cmd("ping ev.cwjh.cn -c 1", buf, sizeof(buf));
@@ -70,6 +72,31 @@ void auto_ppp_proc(void)
             {
                 set_ppp_status(0, 0);
             }
+        }
+    }
+    else
+    {
+        pt = get_rtc_time();
+        DBG_Print(LEVEL2, "RTC time year:%d\r\n", pt[0]);
+        if ((pt[0] > 60) || (pt[0] < 22))
+        {
+            if (dms_init() != 0)
+            {
+                DBG_Print(LEVEL0, "dms_init fail!\n");
+                return;
+            }
+            ret = dms_set_operating_mode(1);
+            if (ret != 0)
+            {
+                DBG_Print(LEVEL0, "set operate mode fail!\n");
+            }
+            sleep(3);
+            ret = dms_set_operating_mode(0);
+            if (ret != 0)
+            {
+                DBG_Print(LEVEL0, "set operate mode fail!\n");
+            }
+            dms_deinit();
         }
     }
 }
