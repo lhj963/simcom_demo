@@ -902,6 +902,7 @@ void *autosleep_proc(void *arg)
 		char rbuff[3] = {0};
 		int lvalue = 0;
 		unsigned long s_check_dbgfile_time = get_run_time();
+		int channel = 0;
 
 		ret = lseek(fd, (off_t)0, SEEK_SET);
 		ret += read(fd, rbuff, 3);
@@ -909,6 +910,10 @@ void *autosleep_proc(void *arg)
 		if (lvalue)
 		{
 			autosleep_enable(1);
+			for (channel = 0; channel < 9; channel++)
+			{
+				set_server_change_flag(channel, 1);
+			}
 		}
 		else
 		{
@@ -1424,131 +1429,12 @@ void install_signal_handler(void)
 	sigaction(SIGTERM, &ac, 0);
 }
 
-void gb32960_deal(INT8U cmd, INT8U ack_flag, void *pvin, INT8U jiami_way, void *content, INT16U contentlen)
-{
-	unsigned char *ptr = 0;
-	unsigned int rlen = 0;
-
-	ptr = (unsigned char *)content;
-	switch (cmd)
-	{
-	case 0xA5:
-	{
-		INT8U buf[64] = {0};
-		INT8U ack[32] = {0};
-		INT8U ack_time[6] = {0};
-		INT8U slen = 0;
-
-		DBG_Print(LEVEL2, "SMS智能座舱控制命令时间:%02X %02X %02X %02X %02X %02X\r\n命令ID:%02X\r\n",
-				  ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6]);
-
-		switch (ptr[6]) // 命令ID
-		{
-		case 0x51: // 短信唤醒
-			if (strstr((ptr + 16), "DFAC#WakeUp#tBox"))
-			{
-				modem_ri_notify_mcu();
-			}
-			else
-			{
-				DBG_Print(LEVEL2, "Do NOT find DFAC#WakeUp#tBox \r\n");
-			}
-
-			break;
-		default:
-			DBG_Print(LEVEL2, "Do NOT find cmd SMS wake up \r\n");
-			break;
-		}
-	}
-	break;
-	default:
-		DBG_Print(LEVEL2, "Do NOT find cmd TSP CMD 0xA5 \r\n");
-		break;
-	}
-}
-
-#define GB_LEN_VIN 17 // VIN长度
-#define GB32960_CONTENT_OFFSET (2 + 1 + 1 + GB_LEN_VIN + 1 + 2)
-#define GB32960_MIN_PACK_LEN (2 + 2 + 17 + 1 + 2 + 1)
-#define GB32960_CMD_OFFSET 2
-#define GB32960_CMD_ACK_FLAG_OFFSET 3
-#define GB32960_VIN_OFFSET 4
-#define GB32960_JIAMI_WAY_OFFSET 21
-#define GB32960_CONTENT_LEN_OFFSET 22
-
-void gb32960_ack_plat(void *pdat, unsigned int len)
-{
-	unsigned char *ptr = (unsigned char *)pdat;
-	unsigned char *phead = 0;
-
-	unsigned char cmd = 0;
-	unsigned char ack_flag = 0;
-	unsigned char *pvin = 0;
-	unsigned char jiami_way = 0;
-	unsigned char *content = 0;
-	unsigned short contentlen = 0;
-	unsigned char xor = 0;
-
-	if (len < GB32960_MIN_PACK_LEN)
-	{
-		return;
-	}
-
-	if ((pdat == 0) || (len == 0))
-	{
-		return;
-	}
-
-	while (1)
-	{
-		phead = _find_sub_str(ptr, len, "\x23\x23", 2);
-		if (phead == 0)
-		{
-			break;
-		}
-
-		// 长度检验
-		if ((ptr + len - phead) < GB32960_MIN_PACK_LEN)
-		{
-			break;
-		}
-
-		cmd = *(phead + GB32960_CMD_OFFSET);
-		ack_flag = *(phead + GB32960_CMD_ACK_FLAG_OFFSET);
-		pvin = phead + GB32960_VIN_OFFSET;
-		jiami_way = *(phead + GB32960_JIAMI_WAY_OFFSET);
-		contentlen = ((*(phead + GB32960_CONTENT_LEN_OFFSET)) << 8) + (*(phead + GB32960_CONTENT_LEN_OFFSET + 1));
-		content = phead + GB32960_CONTENT_OFFSET;
-
-		// 长度检验
-		if ((phead + GB32960_CONTENT_OFFSET + contentlen) >= (ptr + len))
-		{
-			break;
-		}
-		xor = *(phead + GB32960_CONTENT_OFFSET + contentlen);
-
-		DBG_Print(LEVEL2, "-------------GB32960 sms ack-------\r\n"
-						  "cmd:%02X ack:%02X vin:%s jiami:%02X dataunitlen:%d xor:%02X\r\n",
-				  cmd, ack_flag, pvin, jiami_way, contentlen, xor);
-		if (strstr((char *)(phead), sysparam_get_vin()))
-		{
-			gb32960_deal(cmd, ack_flag, pvin, jiami_way, content, contentlen);
-		}
-		else
-		{
-			DBG_Print(LEVEL2, " VIN is ERROR.true_vin:%s\r\n", sysparam_get_vin());
-		}
-		ptr = phead + GB32960_CONTENT_OFFSET + contentlen + 1;
-		len -= (GB32960_CONTENT_OFFSET + contentlen + 1);
-	}
-}
-
 simcom_voice_call_info call_info_msg;
 
 void process_simcom_ind_message(simcom_event_e event, void *cb_usr_data)
 {
 	int i;
-	DBG_Print(LEVEL2, "process_simcom_ind_message event=%d\n", event);
+	// DBG_Print(LEVEL2, "process_simcom_ind_message event=%d\n", event);
 	switch (event)
 	{
 	case SIMCOM_EVENT_VOICE_CALL_IND:
@@ -1628,21 +1514,38 @@ void process_simcom_ind_message(simcom_event_e event, void *cb_usr_data)
 	case SIMCOM_EVENT_SMS_PP_IND:
 	{
 		sms_info_type sms_info;
+		int i = 0;
 		memcpy((void *)&sms_info, cb_usr_data, sizeof(sms_info));
 
-		DBG_Print(LEVEL2, "\n-----------receive message ---------------------\n");
-		DBG_Print(LEVEL2, "is_concate = %d\n", sms_info.is_concate);
-		DBG_Print(LEVEL2, "msg_ref = %d\n", sms_info.msg_ref);
-		DBG_Print(LEVEL2, "seq_num = %d\n", sms_info.seq_num);
-		DBG_Print(LEVEL2, "total_sm = %d\n", sms_info.total_sm);
-		DBG_Print(LEVEL2, "format = %d\n", sms_info.format);
-		DBG_Print(LEVEL2, "message_len = %d\n", sms_info.message_len);
-		DBG_Print(LEVEL2, "address=%s\n", sms_info.source_address);
-		DBG_Print(LEVEL2, "content:%s\n", sms_info.message_content);
+		// DBG_Print(LEVEL2, "\n-----------receive message ---------------------\n");
+		// DBG_Print(LEVEL2, "is_concate = %d\n", sms_info.is_concate);
+		// DBG_Print(LEVEL2, "msg_ref = %d\n", sms_info.msg_ref);
+		// DBG_Print(LEVEL2, "seq_num = %d\n", sms_info.seq_num);
+		// DBG_Print(LEVEL2, "total_sm = %d\n", sms_info.total_sm);
+		// DBG_Print(LEVEL2, "format = %d\n", sms_info.format);
+		// DBG_Print(LEVEL2, "message_len = %d\n", sms_info.message_len);
+		// DBG_Print(LEVEL2, "address=%s\n", sms_info.source_address);
+		// DBG_Print(LEVEL2, "content:%s\n", sms_info.message_content);
 
 		if (sms_info.message_len > 0)
 		{
-			gb32960_ack_plat(sms_info.message_content, sms_info.message_len);
+
+			if (strstr(sms_info.message_content, "DFAC#WakeUp#tBox"))
+			{
+				modem_ri_notify_mcu();
+				for (i = 0; i < 9; i++)
+				{
+					set_server_change_flag(i, 1);
+				}
+			}
+			else
+			{
+				DBG_Print(LEVEL0, " Do Not Find DFAC#WakeUp#tBox!!!\n");
+			}
+		}
+		else
+		{
+			DBG_Print(LEVEL0, " SMS len ERROR!!!\n");
 		}
 	}
 	break;
@@ -1733,7 +1636,7 @@ void start_tbox(void)
 	jmrh_init(jmrh_jiami);
 	reg_jmrh_ota_cb_func(jmrh_ota_cb);
 
-	Set_DBG_Level(LEVEL1);
+	Set_DBG_Level(LEVEL0);
 	DBG_Init(0, 0, 0, 0, dbg_create_sem, dbg_wait_sem, dbg_post_sem, dbg_send, 0);
 	DBG_Print(LEVEL0, "Software:%s Compile @ %s %s\r\n", SOFTWARE_VERSION, __DATE__, __TIME__);
 

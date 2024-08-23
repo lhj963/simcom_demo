@@ -34,7 +34,7 @@ unsigned int list_folder(void *floder_path, void (*p_cb_fun)(void *full_path_fil
 
     if (stat((char *)floder_path, &dirstat) == -1)
     {
-        // DBG_Print(LEVEL2,"cannot access %s\r\n",(char *)floder_path);
+        DBG_Print(LEVEL2, "cannot access %s\r\n", (char *)floder_path);
         return 0;
     }
 
@@ -290,7 +290,7 @@ unsigned char is_dir_exist(void *szpath)
 
     if (stat((char *)szpath, &dirstat) == -1)
     {
-        // DBG_Print(LEVEL2,"cannot access %s\r\n",(char *)szpath);
+        DBG_Print(LEVEL2, "cannot access %s\r\n", (char *)szpath);
         return 0;
     }
 

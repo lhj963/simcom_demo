@@ -368,12 +368,13 @@ void *tcp_connect_thread(void *parg)
 {
     unsigned char channel = 0;
     unsigned long last_connect_tcp_time[9] = {0};
-
+    unsigned char *pt = get_rtc_time();
     ftp_init(ls_poc_create_tcp_connect, (int (*)(int, void *, unsigned int))write, read, bind_port_and_listen, myaccept);
 
     while (1)
     {
-        if (get_ppp_status(0))
+        pt = get_rtc_time();
+        if (get_ppp_status(0) && ((pt[0] < 60) && (pt[0] > 22)))
         {
             for (channel = 0; channel < 7; channel++)
             {
@@ -438,7 +439,7 @@ void *tcp_connect_special_thread(void *parg)
             sleep(2);
             for (channel = 7; channel < 9; channel++)
             {
-                DBG_Print(LEVEL2, "tcp_connect_special_thread,channel:%d,status:%d \r\n", channel, get_server_connect_status(channel));
+                // DBG_Print(LEVEL2, "tcp_connect_special_thread,channel:%d,status:%d \r\n", channel, get_server_connect_status(channel));
                 if (get_server_change_flag(channel))
                 {
                     if (s_socketfd[channel] > 0)
@@ -616,7 +617,7 @@ void *tcp_recv_thread(void *parg)
     }
     while (1)
     {
-        for (channel = 0; channel < 9; channel++)
+        for (channel = 0; channel < max_index; channel++)
         {
             if (get_server_connect_status(channel) && (s_socketfd[channel] > 0)) // connect ok
             {
@@ -629,11 +630,11 @@ void *tcp_recv_thread(void *parg)
                 port_pollfd[channel].fd = -1;
             }
         }
-        status = poll(port_pollfd, max_index, 1000);
+        status = poll(port_pollfd, max_index, 3000);
         if (status > 0)
         {
 
-            for (channel = 0; channel <= max_index; ++channel)
+            for (channel = 0; channel < max_index; ++channel)
             {
                 if (port_pollfd[channel].fd == -1)
                 {
@@ -655,6 +656,7 @@ void *tcp_recv_thread(void *parg)
                     }
                     else
                     {
+                        DBG_Print(LEVEL0, "tcp_recv_thread read date from server ERROR  ret=%d \r\n", ret);
                         if (ret == 0)
                         {
                             kick_cnt[channel]++;
@@ -679,10 +681,10 @@ void *tcp_recv_thread(void *parg)
         }
         else if (status == 0) // time out
         {
-            // DBG_Print(LEVEL2, "tcp_recv_thread time out\r\n");
         }
         else // error
         {
+            DBG_Print(LEVEL0, "tcp_recv_thread ERROR status:%d\r\n", status);
             static char s_select_flag = 0;
             if (s_select_flag == 0)
             {

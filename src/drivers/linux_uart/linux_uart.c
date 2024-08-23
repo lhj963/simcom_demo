@@ -1,5 +1,4 @@
 #include "linux_uart.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

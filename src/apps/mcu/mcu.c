@@ -2070,7 +2070,6 @@ void send_offline_msg_to_mcu(unsigned char channel)
 void send_online_msg_to_mcu(unsigned char channel)
 {
 	unsigned char temp[2] = {0};
-
 	temp[0] = channel;
 	send_msg_to_mcu(TCCP_MPU_SEND_ONLINE_MSG_ID, temp, 1);
 }

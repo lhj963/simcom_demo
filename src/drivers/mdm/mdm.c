@@ -77,7 +77,7 @@ void auto_ppp_proc(void)
     else
     {
         pt = get_rtc_time();
-        DBG_Print(LEVEL2, "RTC time year:%d\r\n", pt[0]);
+        // DBG_Print(LEVEL2, "RTC time year:%d\r\n", pt[0]);
         if ((pt[0] > 60) || (pt[0] < 22))
         {
             if (dms_init() != 0)
