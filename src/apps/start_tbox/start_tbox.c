@@ -464,6 +464,7 @@ void insert_uart_recv_thread(void)
 		if (is_update_mcu_mode() == 0)
 		{
 			send_heartbeat_to_mcu();
+			// DBG_Print(LEVEL2, "send_heartbeat_to_mcu!!! \n");
 			if (is_param_change())
 			{
 				send_param_to_mcu();
@@ -562,7 +563,7 @@ char is_wifi_ap_already_exsit(void)
 	char buf[256] = {0};
 
 	exe_system_cmd("ps | grep hostapd", buf, 256);
-	if (strstr(buf, "hostapd -s -g"))
+	if (strstr(buf, "hostapd -P /var/run/wifi-AP0_2G.pid"))
 	{
 		return 1;
 	}
@@ -846,6 +847,43 @@ void write_cfg_file(void)
 		system("chmod 777 /usr/bin/wlan0_ap.sh");
 		DBG_Print(LEVEL2, "write wlan0_ap.sh file\r\n");
 	}
+}
+
+void *no_wifi_proc(void *arg)
+{
+	system("/etc/init.d/mwlan stop");
+	system("/etc/init.d/mwlan disable");
+	wifi_power(0);
+	sleep(30);
+	// write_cfg_file_wifi();
+
+	while (1)
+	{
+		sleep(3);
+		if (is_wifi_ap_already_exsit())
+		{
+			// DBG_Print(LEVEL2, "wifi ap exsit\r\n");
+			system("/etc/init.d/mwlan stop");
+			system("/etc/init.d/mwlan disable");
+			wifi_power(0);
+		}
+		else
+		{
+			/*
+			write_cfg_file_wifi();
+			exe_system_cmd("udhcpc -i wlan0-vxd -q", s_wifi_proc_r_buf, 2048);
+			if (GetSubString(s_wifi_proc_r_buf, "ease of ", " ob", s_wifi_proc_w_buf, 1024))
+			{
+				memset(s_wifi_proc_r_buf, 0, sizeof(s_wifi_proc_r_buf));
+				sprintf(s_wifi_proc_r_buf, "ifconfig wlan0-vxd %s", s_wifi_proc_w_buf);
+				system(s_wifi_proc_r_buf);
+				set_wifi_client_status(1);
+			}
+			DBG_Print(LEVEL2, "wifi ap create take times:%u\r\n", get_run_time());
+			*/
+		}
+	}
+	return 0;
 }
 
 void *wifi_proc(void *arg)
@@ -1515,17 +1553,18 @@ void process_simcom_ind_message(simcom_event_e event, void *cb_usr_data)
 	{
 		sms_info_type sms_info;
 		int i = 0;
+
 		memcpy((void *)&sms_info, cb_usr_data, sizeof(sms_info));
 
-		// DBG_Print(LEVEL2, "\n-----------receive message ---------------------\n");
-		// DBG_Print(LEVEL2, "is_concate = %d\n", sms_info.is_concate);
-		// DBG_Print(LEVEL2, "msg_ref = %d\n", sms_info.msg_ref);
-		// DBG_Print(LEVEL2, "seq_num = %d\n", sms_info.seq_num);
-		// DBG_Print(LEVEL2, "total_sm = %d\n", sms_info.total_sm);
-		// DBG_Print(LEVEL2, "format = %d\n", sms_info.format);
-		// DBG_Print(LEVEL2, "message_len = %d\n", sms_info.message_len);
-		// DBG_Print(LEVEL2, "address=%s\n", sms_info.source_address);
-		// DBG_Print(LEVEL2, "content:%s\n", sms_info.message_content);
+		DBG_Print(LEVEL0, "\n-----------receive message ---------------------\n");
+		DBG_Print(LEVEL0, "is_concate = %d\n", sms_info.is_concate);
+		DBG_Print(LEVEL0, "msg_ref = %d\n", sms_info.msg_ref);
+		DBG_Print(LEVEL0, "seq_num = %d\n", sms_info.seq_num);
+		DBG_Print(LEVEL0, "total_sm = %d\n", sms_info.total_sm);
+		DBG_Print(LEVEL0, "format = %d\n", sms_info.format);
+		DBG_Print(LEVEL0, "message_len = %d\n", sms_info.message_len);
+		DBG_Print(LEVEL0, "address=%s\n", sms_info.source_address);
+		DBG_Print(LEVEL0, "content:%s\n", sms_info.message_content);
 
 		if (sms_info.message_len > 0)
 		{
@@ -1541,6 +1580,7 @@ void process_simcom_ind_message(simcom_event_e event, void *cb_usr_data)
 			else
 			{
 				DBG_Print(LEVEL0, " Do Not Find DFAC#WakeUp#tBox!!!\n");
+				sms_arrive(get_rtc_time(), sms_info.source_address, sms_info.message_content, sms_info.message_len);
 			}
 		}
 		else
@@ -1686,7 +1726,7 @@ void start_tbox(void)
 	pthread_create(&autosleep_tid, NULL, autosleep_proc, NULL);
 	pthread_create(&ntid, NULL, work_proc, NULL);
 	pthread_create(&at_tid, NULL, at_thread, NULL);
-	pthread_create(&wifi_tid, NULL, wifi_proc, NULL);
+	pthread_create(&wifi_tid, NULL, no_wifi_proc, NULL);
 
 	pthread_create(&tcp_send_tid, NULL, tcp_send_thread, 0);
 	pthread_create(&tcp_recv_tid, NULL, tcp_recv_thread, 0);
