@@ -530,7 +530,7 @@ void *tcp_send_thread(void *parg)
                         else
                         {
                             record_net_log(channel, "发送", p_send_buffer, send_length);
-                            s_tcp_send_total_bytes += get_data_send_len(channel);
+                            s_tcp_send_total_bytes += send_length;
                         }
                     }
                     else

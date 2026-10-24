@@ -75,6 +75,7 @@ void auto_ppp_proc(void)
     int ret;
     unsigned char mode = 0;
     static unsigned int mode_time = 9;
+    char buf[256] = {0};
     unsigned char *pt = get_rtc_time();
     if (is_time_format_ok(pt))
     {
