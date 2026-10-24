@@ -65,6 +65,7 @@ void *ftp_data_thread(void *parg)
         printf("data thread connect false\n");
         
         if (upload_flag && sFTPStruction.p_upload_finish) sFTPStruction.p_upload_finish(1);
+        sFTPStruction.upload_or_download_ok_flag = 1;
 
         return (void *)1;
     }
@@ -88,6 +89,7 @@ void *ftp_data_thread(void *parg)
             cnt++;
             if (cnt >= 20)
             {
+                cnt = 0;
                 sleep(1);
             }
 
@@ -107,6 +109,7 @@ void *ftp_data_thread(void *parg)
         while (1)
         {
             rlen = sFTPStruction.read(data_client_socket,sFTPStruction.buf,sizeof(sFTPStruction.buf));
+            if (rlen <= 0) break;
             if (rlen > 0)
             {
                 printf("recv ftp data:%u(%s)\r\n",rlen,sFTPStruction.buf);
@@ -262,7 +265,7 @@ void *ftp_upload_cmd_thread(void *parg)
         sleep(2);
     }
 
-    _exe_ftp_cmd(s,"QUTI\r\n",strlen("QUTI\r\n"),buf,sizeof(buf));
+    _exe_ftp_cmd(s,"QUIT\r\n",strlen("QUIT\r\n"),buf,sizeof(buf));
     close(s);
     printf("ftp download/upload finish.\r\n");
     
@@ -330,6 +333,7 @@ void *ftp_download_cmd_thread(void *parg)
     //sprintf(cmd,"LIST\r\n");
     //_exe_ftp_cmd(s,cmd,strlen(cmd),0,0);
 
+    sprintf(cmd,"RETR %s\r\n",sFTPStruction.file_name);
     _exe_ftp_cmd(s,cmd,strlen(cmd),0,0);
 
     pthread_create(&data_tid, NULL, ftp_data_thread,0);

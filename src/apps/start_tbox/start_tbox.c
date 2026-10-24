@@ -927,7 +927,7 @@ void *autosleep_proc(void *arg)
 	{
 		char rbuff[3] = {0};
 		int lvalue = 0;
-		unsigned long s_check_dbgfile_time = get_run_time();
+		static unsigned long s_check_dbgfile_time = get_run_time();
 		int channel = 0;
 
 		ret = lseek(fd, (off_t)0, SEEK_SET);
