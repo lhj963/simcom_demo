@@ -269,7 +269,7 @@ void blind_file_send(void *full_path_filename, void *p_user_arg)
     pbuf = (unsigned char *)malloc(2048);
     if (pbuf)
     {
-        rlen = myreadfile(full_path_filename, pbuf + 64, 2048 - 64);
+        rlen = myreadfile(full_path_filename, pbuf + 64, 2048 - 64 - 66);
         if (rlen)
         {
             if ((channel == 1) && (sysparam_get_func_select() == FuncSelect_JMRH_SM4))

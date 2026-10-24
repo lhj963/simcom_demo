@@ -312,6 +312,12 @@ int box_firmware_unpack(void *pdat,unsigned int datlen,
 	}
 
 	pfiledata = ptr + xlen;
+	if ((mcu_end_offset > (datlen - xlen)) ||
+		(mpu_start_offset > mpu_end_offset) || (mpu_end_offset > (datlen - xlen)) ||
+		(cfg_start_offset > cfg_end_offset) || (cfg_end_offset > (datlen - xlen)))
+	{
+		return 5;
+	}
 
 	if (mcu_end_offset)
 	{
@@ -370,6 +376,7 @@ int box_firmware_unpack(void *pdat,unsigned int datlen,
 		lib_end_offset += (p_lib_info[libidx++] << 8);
 		lib_end_offset += (p_lib_info[libidx++]);
 
+		if ((lib_start_offset > lib_end_offset) || (lib_end_offset > (datlen - xlen))) return 5;
 		if (lib_dat_callback)
 		{
 			lib_dat_callback(fn,pfiledata + lib_start_offset,lib_end_offset - lib_start_offset + 1);

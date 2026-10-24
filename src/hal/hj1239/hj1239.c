@@ -41,6 +41,7 @@ unsigned int hj1239_data_pack(void *pHJ1239FormatData,unsigned int datlen)
 	pSignStart = (unsigned char *)pHJ1239FormatData + (2+1+17+1+1+2);
 	pPlaceSignStart = (unsigned char *)pHJ1239FormatData + datlen - 1;
 	raw_data_len = (*((unsigned char *)pHJ1239FormatData + (2+1+17+1+1)) << 8) + *((unsigned char *)pHJ1239FormatData + (2+1+17+1+1+1));
+	if (raw_data_len > (datlen - 24)) return datlen;
 
 	//after sign the content len
 	*((unsigned char *)pHJ1239FormatData + (2+1+17+1+1)) = (raw_data_len + 66) >> 8;

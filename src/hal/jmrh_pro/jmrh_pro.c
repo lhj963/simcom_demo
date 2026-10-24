@@ -113,11 +113,14 @@ void jmrh_analyze_plat_data(void *pdat,unsigned int len)
         if (purl && ((purl - (unsigned char *)pdat) >= 8))
         {
             urllen = *(purl - 1);
+            if (urllen > (len - (unsigned int)(purl - (unsigned char *)pdat))) return ;
             if (urllen) memcpy(url,purl,urllen);
             usrlen = *(purl + urllen);
+            if (usrlen > (len - (unsigned int)(purl - (unsigned char *)pdat) - urllen - 1)) return ;
             if (usrlen >= 128) return ;
             if (usrlen) memcpy(usr,purl + urllen + 1,usrlen);
             pswlen = *(purl + urllen + 1 + usrlen);
+            if (pswlen > (len - (unsigned int)(purl - (unsigned char *)pdat) - urllen - 1 - usrlen - 1)) return ;
             if (pswlen >= 128) return ;
             if (pswlen) memcpy(psw,purl + urllen + 1 + usrlen + 1,pswlen);
 
