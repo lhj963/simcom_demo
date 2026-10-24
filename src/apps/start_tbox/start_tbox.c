@@ -928,7 +928,8 @@ void *autosleep_proc(void *arg)
 	{
 		char rbuff[3] = {0};
 		int lvalue = 0;
-		static unsigned long s_check_dbgfile_time = get_run_time();
+		static unsigned long s_check_dbgfile_time = 0;
+		static unsigned char s_check_dbgfile_time_init = 0;
 		int channel = 0;
 
 		ret = lseek(fd, (off_t)0, SEEK_SET);
@@ -945,6 +946,11 @@ void *autosleep_proc(void *arg)
 		else
 		{
 			autosleep_enable(0);
+		}
+		if (s_check_dbgfile_time_init == 0)
+		{
+			s_check_dbgfile_time_init = 1;
+			s_check_dbgfile_time = get_run_time();
 		}
 		if ((get_run_time() - s_check_dbgfile_time) >= 60 * 60 * 4)
 		{
