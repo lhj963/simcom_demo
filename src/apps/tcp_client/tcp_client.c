@@ -510,7 +510,7 @@ void *tcp_send_thread(void *parg)
                             data_send_len_clr(channel);
                         }
                         pthread_mutex_unlock(&(channel_mutex[channel]));
-                        if (write(s_socketfd[channel], p_send_buffer, send_length) < 0)
+                        if (write(s_socketfd[channel], p_send_buffer, send_length) != (int)send_length)
                         {
                             set_server_connect_status(channel, 0);
                             close(s_socketfd[channel]);
