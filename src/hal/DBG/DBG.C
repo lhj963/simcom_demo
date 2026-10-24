@@ -193,6 +193,7 @@ int DBG_PrintEx(int iLevel,void *pext,void *str,...)
 	va_start(ap,str);
 	len = vsnprintf(buf,sizeof(buf) - 1,(char *)str,ap);
 	va_end(ap);
+	if (len >= (int)sizeof(buf)) len = sizeof(buf) - 1;
 	_DBG_SenDataNewEx(pext,buf,len);
 	PostDbgTxSemNew();
 	return len;
@@ -215,6 +216,7 @@ int DBG_Print(int iLevel,void *str,...)
 	va_start(ap,str);
 	len = vsnprintf(buf,sizeof(buf) - 1,(char *)str,ap);
 	va_end(ap);
+	if (len >= (int)sizeof(buf)) len = sizeof(buf) - 1;
 	_DBG_SenDataNew(buf,len);
 	PostDbgTxSemNew();
 	return len;

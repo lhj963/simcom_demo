@@ -52,12 +52,14 @@ int bind_port_and_listen(unsigned int port)
     if (bind(sockfd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1)
     {
         DBG_Print(LEVEL1, "bind socket error");
+        close(sockfd);
         return 0;
     }
 
     if (listen(sockfd, 10) == -1)
     {
         DBG_Print(LEVEL1, "listen");
+        close(sockfd);
         return 0;
     }
 

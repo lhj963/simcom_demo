@@ -214,7 +214,10 @@ uint64_t get_disk_info(void *disk_path, uint64_t *p_out_total_size, uint64_t *p_
         return 1;
     }
 
-    statfs((char *)disk_path, &diskInfo);
+    if (statfs((char *)disk_path, &diskInfo) != 0)
+    {
+        return 1;
+    }
 
     total_size = (uint64_t)diskInfo.f_blocks * diskInfo.f_bsize;
     free_size = (uint64_t)diskInfo.f_bfree * diskInfo.f_bsize;

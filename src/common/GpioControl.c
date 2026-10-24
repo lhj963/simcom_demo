@@ -80,6 +80,7 @@ int gpio_file_create(int gpio)
 	if (reto != len)
 	{
 		DBG_Print(LEVEL2, "create gpio(%d) files:%d,%d,%d\n", gpio, __LINE__, len, reto);
+		close(sfd);
 		return reto;
 	}
 	usleep(1000);
@@ -120,6 +121,7 @@ int gpio_file_remove(int gpio)
 	if (reto != len)
 	{
 		DBG_Print(LEVEL2, "%s:%d,%d,%d\n", __FUNCTION__, __LINE__, len, reto);
+		close(sfd);
 		return reto;
 	}
 
@@ -173,7 +175,7 @@ int gpio_get_dir(unsigned int gpio)
 	}
 	memset(buff, 0, MAX_BUF);
 	count = read(fd, buff, MAX_BUF);
-	if (count == 0)
+	if (count <= 0)
 	{
 		DBG_Print(LEVEL2, "read faild");
 		close(fd);
@@ -230,7 +232,7 @@ int gpio_get_value(unsigned int gpio)
 	}
 	memset(buff, 0, MAX_BUF);
 	count = read(fd, buff, MAX_BUF);
-	if (count == 0)
+	if (count <= 0)
 	{
 		DBG_Print(LEVEL2, "read faild");
 		close(fd);

@@ -278,6 +278,7 @@ void monitor_user_cmd_proc(int *pfd)
 			cmdlen = myreadfile("/data/tboxin.dat", cmd, sizeof(cmd));
 			analyze_user_input_cmd(cmd, cmdlen, 0, 0);
 
+			close(*pfd);
 			*pfd = inotify_init1(IN_NONBLOCK);
 		}
 	}
@@ -474,7 +475,7 @@ void *at_thread(void *arg)
 	unsigned long long s_at1_cmd_time = 0;
 	unsigned int s_at_cnt = 0;
 	char cmd[96] = {0};
-	uint8_t rssi;
+	uint8_t rssi = 0;
 	int ret = 0;
 
 	send_at_cmd("AT+CCLK?\r\n");
@@ -1257,7 +1258,7 @@ void jmrh_ota_cb(OTAParam *p)
 	cmd = (char *)malloc(512);
 	if (cmd)
 	{
-		sprintf(cmd, "[jmrh ota]url:%s usr:%s psw:%s\r\n", p->url, p->usr, p->psw);
+		snprintf(cmd, 512, "[jmrh ota]url:%s usr:%s psw:%s\r\n", p->url, p->usr, p->psw);
 		save_log(cmd, 0, 0);
 
 		// system("wget -O /data/test_ota.zip ftp://users:123456@222.128.13.25:8121/1476393798278971392_1478673173863071744.zip");

@@ -485,7 +485,7 @@ char *GetSubString(char *str, char *pSubStr1, char *pSubStr2, char *pOutBuf, uns
 	if (pTemp2)
 	{
 		templen = pTemp2 - (pTemp1 + strlen((char *)pSubStr1));
-		templen = (outbuflen >= templen) ? templen : outbuflen;
+		templen = (outbuflen > templen) ? templen : (outbuflen - 1);
 		memset(pOutBuf, 0, outbuflen);
 		if (templen)
 			memcpy(pOutBuf, pTemp1 + strlen((char *)pSubStr1), templen);
@@ -557,7 +557,7 @@ void *_find_sub_str(void *pbuf, unsigned int ulBufLen,
 		return 0;
 	}
 
-	for (i = 0; i < ulBufLen; i++)
+	for (i = 0; (i + ulSubStrLen) <= ulBufLen; i++)
 	{
 		if (*(pSrc + i) == *pSubStr) // �ҵ���һ���ֽ�
 		{

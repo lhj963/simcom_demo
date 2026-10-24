@@ -7,7 +7,7 @@ int update_sim_info_proc(void)
 {
     char imei[32] = {0};
     char iccid[32] = {0};
-    SimCard_Status_type simstatus;
+    SimCard_Status_type simstatus = {0};
 
     if (strlen(get_imei_ptr()) < 3)
     {
@@ -73,7 +73,7 @@ void ql_qcmapclient_sighandler(int signal)
 void auto_ppp_proc(void)
 {
     int ret;
-    unsigned char mode;
+    unsigned char mode = 0;
     static unsigned int mode_time = 9;
     unsigned char *pt = get_rtc_time();
     if (is_time_format_ok(pt))

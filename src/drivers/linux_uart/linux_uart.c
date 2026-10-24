@@ -327,12 +327,14 @@ int open_uart(unsigned char channel, void *dev_path, unsigned int bps, unsigned 
 	if (0 != _uart_set_speed(fd, baud))
 	{
 		DBG_Print(LEVEL0, "set speed error\r\n");
+		close(fd);
 		return 4;
 	}
 
 	if (0 != _uart_set_parity(fd, 8, 1, 'N'))
 	{
 		DBG_Print(LEVEL0, "set parity error.\r\n");
+		close(fd);
 		return 5;
 	}
 
