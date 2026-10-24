@@ -1100,7 +1100,7 @@ void analyze_mcu_data(unsigned int msgid, void *content, unsigned int contentlen
 
 	case TCCP_MCU_TO_MPU_PARAM_MSG_ID:
 
-		if (memcmp(sysparam_get_vin(), ptr, 17))
+		if ((contentlen >= 17) && memcmp(sysparam_get_vin(), ptr, 17))
 		{
 			memcpy(sysparam_get_vin(), ptr, 17);
 		}
@@ -1477,6 +1477,11 @@ void analyze_mcu_data(unsigned int msgid, void *content, unsigned int contentlen
 			clen = (ptr[xlen++] << 8);
 			clen += ptr[xlen++];
 
+			if (clen > (contentlen - 4))
+			{
+				break;
+			}
+
 			switch (param_id)
 			{
 			case PARAM_ID_FROM_MCU_SOFTWARE_VERSION:
@@ -1484,21 +1489,30 @@ void analyze_mcu_data(unsigned int msgid, void *content, unsigned int contentlen
 					memcpy(get_mcu_ver(), ptr + xlen, (clen > 36) ? 36 : clen);
 				break;
 			case PARAM_ID_FROM_MCU_MAIN_POWER_VOL:
-				set_main_power_vol((ptr[xlen] << 8) + ptr[xlen + 1]);
+				if (clen >= 2)
+					set_main_power_vol((ptr[xlen] << 8) + ptr[xlen + 1]);
 				break;
 			case PARAM_ID_FROM_MCU_BAT_VOL:
-				set_bat_vol((ptr[xlen] << 8) + ptr[xlen + 1]);
+				if (clen >= 2)
+					set_bat_vol((ptr[xlen] << 8) + ptr[xlen + 1]);
 				break;
 			case PARAM_ID_FROM_MCU_SERVER:
-				sysparam_set_serveraddr(ptr[xlen], ptr + xlen + 3, clen - 3);
-				sysparam_set_serverport(ptr[xlen], (ptr[xlen + 1] << 8) + ptr[xlen + 2]);
+				if (clen >= 3)
+				{
+					sysparam_set_serveraddr(ptr[xlen], ptr + xlen + 3, clen - 3);
+					sysparam_set_serverport(ptr[xlen], (ptr[xlen + 1] << 8) + ptr[xlen + 2]);
+				}
 				break;
 			case PARAM_ID_FROM_MCU_CHIP_ID:
-				sysparam_set_jiami_chip_id(ptr + xlen, 16);
+				if (clen >= 16)
+					sysparam_set_jiami_chip_id(ptr + xlen, 16);
 				break;
 			case PARAM_ID_FROM_MCU_POSITION:
-				set_lon((ptr[xlen + 0] << 24) + (ptr[xlen + 1] << 16) + (ptr[xlen + 2] << 8) + ptr[xlen + 3]);
-				set_lat((ptr[xlen + 4] << 24) + (ptr[xlen + 5] << 16) + (ptr[xlen + 6] << 8) + ptr[xlen + 7]);
+				if (clen >= 8)
+				{
+					set_lon((ptr[xlen + 0] << 24) + (ptr[xlen + 1] << 16) + (ptr[xlen + 2] << 8) + ptr[xlen + 3]);
+					set_lat((ptr[xlen + 4] << 24) + (ptr[xlen + 5] << 16) + (ptr[xlen + 6] << 8) + ptr[xlen + 7]);
+				}
 				break;
 			default:
 				break;
@@ -1519,7 +1533,7 @@ void analyze_mcu_data(unsigned int msgid, void *content, unsigned int contentlen
 	break;
 
 	case TCCP_MCU_TO_MPU_STATUS_MSG_ID:
-		set_mcu_status1((ptr[0] << 24) + (ptr[1] << 16) + (ptr[2] << 8) + ptr[3]);
+		if (contentlen >= 4) set_mcu_status1((ptr[0] << 24) + (ptr[1] << 16) + (ptr[2] << 8) + ptr[3]);
 		break;
 
 	case TCCP_MCU_TO_MPU_STORE_CACHE_MSG_ID:
@@ -1539,6 +1553,7 @@ void analyze_mcu_data(unsigned int msgid, void *content, unsigned int contentlen
 
 	case TCCP_MCU_TO_MPU_GET_CACHE_MSG_ID:
 	{
+		if (contentlen < 5) break;
 		unsigned int idx = 0;
 		unsigned int xlen = 0;
 		unsigned char *p = 0;
@@ -1653,7 +1668,8 @@ void analyze_mcu_data(unsigned int msgid, void *content, unsigned int contentlen
 
 	case TCCP_MCU_TO_MPU_GET_FILE_DATA_MSG_ID:
 	{
-		unsigned int xlen;
+		unsigned int xlen = 0;
+		if (contentlen < 9) break;
 		unsigned int offset = 0;
 		unsigned int wantlen = 0;
 		unsigned char *pbuf = 0;
@@ -1724,7 +1740,7 @@ void analyze_mcu_data(unsigned int msgid, void *content, unsigned int contentlen
 
 	case TCCP_MCU_TO_MPU_SEND_SMS_MSG_ID:
 		// printf("[send sms:%s]%s\r\n",ptr,ptr + 24);
-		send_sms(ptr, ptr + 24, contentlen - 24);
+		if (contentlen > 24) send_sms(ptr, ptr + 24, contentlen - 24);
 		break;
 
 	default:
