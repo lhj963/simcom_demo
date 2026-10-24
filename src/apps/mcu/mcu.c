@@ -385,7 +385,7 @@ int create_blind_file(unsigned char channel, void *pdat, unsigned int datlen)
 	pt = get_rtc_time();
 	ms = (unsigned long)(get_run_time_ms());
 
-	s_file_idx++;
+	__sync_fetch_and_add(&s_file_idx, 1);
 	snprintf(fn, sizeof(fn), "/media/card/blind/ch%u/%02u%02u%02u%02u%02u%02u_%lu_%lu.dat", channel,
 			 pt[0], pt[1], pt[2], pt[3], pt[4], pt[5], (long unsigned int)s_file_idx, (long unsigned int)ms);
 	mywritefile(0, fn, pdat, datlen);

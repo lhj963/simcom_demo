@@ -370,6 +370,7 @@ int check_emmc_status(void)
 void *factory_thread(void *arg)
 {
 	unsigned int cnt = 0;
+	pthread_detach(pthread_self());
 
 	while (1)
 	{
