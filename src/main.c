@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
     SimcomUbusInit();
     atctrl_init();
     set_gain_NITZtime_enable(1);
+    uim_init();
     for (i = 0; i < 9; i++)
     {
         pthread_mutex_init(&(channel_mutex[i]), NULL);
@@ -60,6 +61,7 @@ int main(int argc, char *argv[])
     {
         pthread_mutex_destroy(&(channel_mutex[i]));
     }
+    uim_deinit();
     atctrl_deinit();
     SimcomUbusDeinit();
     if (p_data_send_buffer != NULL)

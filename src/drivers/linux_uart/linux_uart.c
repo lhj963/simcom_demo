@@ -46,7 +46,7 @@ int uart_send_bytes(unsigned char channel, void *buffer, unsigned int length)
 	pthread_mutex_lock(&(s_astUartStruction[channel].lock));
 	nBytes = write(s_astUartStruction[channel].fd, (char *)buffer, length);
 	pthread_mutex_unlock(&(s_astUartStruction[channel].lock));
-
+	printf("[##uart_send_bytes:nBytes  = %d\r\n",nBytes);
 	return nBytes;
 }
 

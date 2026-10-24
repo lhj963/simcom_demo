@@ -1,13 +1,13 @@
 #include "globalparam.h"
 
 #if __CWJH_PLAT__
-#define DEFAULT_MAGIC_FLAG 0x1114
+#define DEFAULT_MAGIC_FLAG 0x1124
 const TSERVER defaultserver[] =
     {
         {"ev.cwjh.cn", 17055},
         {"10.0.1.95", 0},
         {"58.248.167.170", 0},
-        {"111.111.111.111", 0},
+        {"qb.cwjh.cn", 15015},
         {"depot32960.flybees.com.cn", 0},
         {"g6check.vecc.org.cn", 0},
         {"111.111.111.111", 0},
@@ -336,8 +336,7 @@ unsigned char get_ppp_status(unsigned char channel)
     {
         return 0;
     }
-    // return s_stSysRunParam.ppp_status[channel];
-    return 1;
+    return s_stSysRunParam.ppp_status[channel];
 }
 
 void set_ppp_status(unsigned char channel, unsigned char val)
@@ -544,6 +543,23 @@ void set_wifi_client_status(unsigned char val)
 unsigned char get_wifi_client_status(void)
 {
     return (s_stSysRunParam.mpu_status1 & (1 << 14)) ? 1 : 0;
+}
+
+void set_sim_card_status(unsigned char val)
+{
+    if (val)
+    {
+        s_stSysRunParam.mpu_status1 |= (1 << 15);
+    }
+    else
+    {
+        s_stSysRunParam.mpu_status1 &= (~(1 << 15));
+    }
+}
+
+unsigned char get_sim_card_status(void)
+{
+    return (s_stSysRunParam.mpu_status1 & (1 << 15)) ? 1 : 0;
 }
 
 unsigned char get_report_at_ack_flag(void)

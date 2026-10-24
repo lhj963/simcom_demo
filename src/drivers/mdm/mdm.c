@@ -7,6 +7,7 @@ int update_sim_info_proc(void)
 {
     char imei[32] = {0};
     char iccid[32] = {0};
+    SimCard_Status_type simstatus;
 
     if (strlen(get_imei_ptr()) < 3)
     {
@@ -35,6 +36,20 @@ int update_sim_info_proc(void)
             }
         } while (i < 5);
     }
+
+    getSimCardStatus(&simstatus);
+
+    if (simstatus.card_status == 1)
+    {
+        DBG_Print(LEVEL0, "%s", "SimCard status is OK\r\n");
+        set_sim_card_status(1);
+    }
+    else
+    {
+        set_sim_card_status(0);
+        DBG_Print(LEVEL0, "%s", "SimCard status is NOT OK\r\n");
+    }
+
     return 0;
 }
 
@@ -58,8 +73,10 @@ void ql_qcmapclient_sighandler(int signal)
 void auto_ppp_proc(void)
 {
     int ret;
-    unsigned char *pt = 0;
-    if (get_ppp_status(0) == 0)
+    unsigned char mode;
+    static unsigned int mode_time = 9;
+    unsigned char *pt = get_rtc_time();
+    if (is_time_format_ok(pt))
     {
         int rlen = exe_system_cmd("ping ev.cwjh.cn -c 1", buf, sizeof(buf));
         if (rlen)
@@ -76,27 +93,38 @@ void auto_ppp_proc(void)
     }
     else
     {
-        pt = get_rtc_time();
-        // DBG_Print(LEVEL2, "RTC time year:%d\r\n", pt[0]);
-        if ((pt[0] > 60) || (pt[0] < 22))
+        set_ppp_status(0, 0);
+    }
+
+    if (get_ppp_status(0) == 0)
+    {
+        mode_time++;
+        if (mode_time > 10)
         {
-            if (dms_init() != 0)
-            {
-                DBG_Print(LEVEL0, "dms_init fail!\n");
-                return;
-            }
-            ret = dms_set_operating_mode(1);
+            mode_time = 0;
+            ret = dms_get_operating_mode(&mode);
             if (ret != 0)
             {
-                DBG_Print(LEVEL0, "set operate mode fail!\n");
+                DBG_Print(LEVEL0, "get operate mode fail!\n");
             }
-            sleep(3);
-            ret = dms_set_operating_mode(0);
-            if (ret != 0)
+            DBG_Print(LEVEL1, "operate mode: %d, time:%u\n", mode, (unsigned int)get_run_time());
+
+            if (mode == 0)
             {
-                DBG_Print(LEVEL0, "set operate mode fail!\n");
+                ret = dms_set_operating_mode(1);
+                if (ret != 0)
+                {
+                    DBG_Print(LEVEL0, "set operate mode fail!\n");
+                }
             }
-            dms_deinit();
+            else
+            {
+                ret = dms_set_operating_mode(0);
+                if (ret != 0)
+                {
+                    DBG_Print(LEVEL0, "set operate mode fail!\n");
+                }
+            }
         }
     }
 }

@@ -186,7 +186,7 @@ void limit_file_cnt_in_folder(void *folder_path, void (*check_file)(void *filena
     // calc the file total cnt
     file_cnt = list_folder_no_sort(folder_path, 0, 0, 0);
 
-    DBG_Print(LEVEL2, "%s file cnt:%u\r\n", folder_path ? folder_path : " ", file_cnt);
+    DBG_Print(LEVEL2, "%s file cnt:%u,time:%u\r\n", folder_path ? folder_path : " ", file_cnt, (unsigned int)get_run_time());//,time:%u\n", channel, (unsigned int)get_run_time());
     if (file_cnt > max_file_cnt)
     {
         list_folder(folder_path, del_file, 0, file_cnt - max_file_cnt);

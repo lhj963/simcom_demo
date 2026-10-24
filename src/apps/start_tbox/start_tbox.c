@@ -187,20 +187,6 @@ unsigned int analyze_user_input_cmd(void *cmd, unsigned int cmdlen, void *pOut, 
 	{
 		sysparam_set_jiami_chip_id(tempbuf, strlen(tempbuf));
 	}
-	/*
-	DBG_Print(LEVEL0, "set dbg level\r\n");
-	if (GetSubString(pcmd, "<dbglevel:", ">", tempbuf, sizeof(tempbuf)))
-	{
-		DBG_Print(LEVEL0, "1set dbg level\r\n");
-		if ((atoi(tempbuf) >= 0) && (atoi(tempbuf) <= 9))
-		{
-			DBG_Print(LEVEL0, "2set dbg level\r\n");
-			DBG_Print(LEVEL0, "3set dbg level: %d\r\n", Get_DBG_Level());
-			Set_DBG_Level(atoi(tempbuf));
-			DBG_Print(LEVEL0, "4set dbg level: %d\r\n", Get_DBG_Level());
-		}
-	}
-	*/
 
 	return ack_len;
 }
@@ -318,7 +304,7 @@ int check_emmc_status(void)
 	char dirpath[96] = {0};
 
 	get_disk_info("/media/card/", &total_size, 0, 0);
-	if ((total_size > (uint64_t)7000000000) && (total_size < (uint64_t)((uint64_t)9 * (uint64_t)1024 * 1024 * 1024)))
+	if ((total_size > (uint64_t)7000000000) && (total_size < (uint64_t)((uint64_t)65 * (uint64_t)1024 * 1024 * 1024)))
 	{
 		set_emmc_status(1);
 
@@ -506,15 +492,16 @@ void *at_thread(void *arg)
 
 		if ((get_run_time() - s_at1_cmd_time) >= 4)
 		{
-			s_at_cnt++;
-			if (s_at_cnt <= 8)
-			{
-				send_at_cmd("AT+LSHENADB=1\r\n");
-				send_at_cmd("AT+CFUN=1\r\n");
-				send_at_cmd("ATI\r\n");
-				// send_at_cmd("AT+ICCID\r\n");
-			}
-
+			/*
+					  s_at_cnt++;
+					  if (s_at_cnt <= 8)
+					  {
+						  send_at_cmd("AT+LSHENADB=1\r\n");
+						  send_at_cmd("AT+CFUN=1\r\n");
+						  send_at_cmd("ATI\r\n");
+						  // send_at_cmd("AT+ICCID\r\n");
+					  }
+			*/
 			ret = getCSQ(&rssi);
 			if (rssi <= 11)
 			{
@@ -984,6 +971,7 @@ void *work_proc(void *arg)
 	int fd = -1;
 	unsigned long s_last_hour_time = 0;
 	unsigned long s_last_day_time = 0;
+	unsigned long s_last_week_time = 0;
 
 	dx83_lib_init();
 	// import_sm4_key(sm4_key,32);
@@ -1008,6 +996,43 @@ void *work_proc(void *arg)
 	}
 
 	fd = inotify_init1(IN_NONBLOCK);
+
+	if (dms_init() != 0)
+	{
+		DBG_Print(LEVEL0, "dms_init fail!\n");
+	}
+	else
+	{
+		unsigned char *pt = get_rtc_time();
+		unsigned int i_count = 0;
+		while (i_count < 10)
+		{
+			i_count++;
+			if (pt[1] != 0)
+			{
+				break;
+			}
+			sleep(2);
+			pt = get_rtc_time();
+		}
+		if (is_time_format_ok(pt))
+		{
+			DBG_Print(LEVEL0, "dms_init is_time_format_ok!\n");
+		}
+		else
+		{
+			DBG_Print(LEVEL1, "dms_init is_time_format NOT ok!\n");
+			int ret = dms_set_operating_mode(1);
+			if (ret != 0)
+			{
+				DBG_Print(LEVEL0, "set operate mode fail!\n");
+			}
+			else
+			{
+				DBG_Print(LEVEL1, "set operate mode success!\n");
+			}
+		}
+	}
 	while (1)
 	{
 		monitor_user_cmd_proc(&fd);
@@ -1028,7 +1053,6 @@ void *work_proc(void *arg)
 				free(retcmd);
 			}
 		}
-
 		s_ppp_cnt++;
 		if (s_ppp_cnt >= 3)
 		{
@@ -1084,8 +1108,16 @@ void *work_proc(void *arg)
 			limit_clog_file_cnt(4);
 			s_last_day_time = get_run_time();
 		}
+
+		if ((get_run_time() - s_last_week_time) >= (3600 * 24 * 3))
+		{
+			system("sync");
+			system("reboot");
+			s_last_week_time = get_run_time();
+		}
 		sleep(1);
 	}
+	dms_deinit();
 }
 
 int _load_param_func(void *full_path_filename, void *sysparam, unsigned int sysparamlen)
@@ -1268,7 +1300,7 @@ void monitor_net_status(void)
 		s_not_connect_time = get_run_time();
 	}
 
-	if ((get_run_time() - s_not_connect_time) > (3600 * 24))
+	if ((get_run_time() - s_not_connect_time) > (3600 * 4))
 	{
 		DBG_Print(LEVEL2, "[%02d-%02d-%02d %02d:%02d:%02d]long time not connect server.mpu reboot\r\n", pt[0], pt[1], pt[2], pt[3], pt[4], pt[5]);
 
@@ -1294,8 +1326,7 @@ void insert_tcp_connect_thread(void)
 			set_handshake_flag(1);
 		}
 	}
-
-	// monitor_net_status();
+	monitor_net_status();
 }
 
 void sms_arrive(unsigned char *ptime, void *phone_num, void *psms, unsigned int len)
@@ -1555,17 +1586,7 @@ void process_simcom_ind_message(simcom_event_e event, void *cb_usr_data)
 		int i = 0;
 
 		memcpy((void *)&sms_info, cb_usr_data, sizeof(sms_info));
-
-		DBG_Print(LEVEL0, "\n-----------receive message ---------------------\n");
-		DBG_Print(LEVEL0, "is_concate = %d\n", sms_info.is_concate);
-		DBG_Print(LEVEL0, "msg_ref = %d\n", sms_info.msg_ref);
-		DBG_Print(LEVEL0, "seq_num = %d\n", sms_info.seq_num);
-		DBG_Print(LEVEL0, "total_sm = %d\n", sms_info.total_sm);
-		DBG_Print(LEVEL0, "format = %d\n", sms_info.format);
-		DBG_Print(LEVEL0, "message_len = %d\n", sms_info.message_len);
-		DBG_Print(LEVEL0, "address=%s\n", sms_info.source_address);
-		DBG_Print(LEVEL0, "content:%s\n", sms_info.message_content);
-
+		DBG_Print(LEVEL2, "\n-----------receive message ---------------------\n");
 		if (sms_info.message_len > 0)
 		{
 
@@ -1676,7 +1697,9 @@ void start_tbox(void)
 	jmrh_init(jmrh_jiami);
 	reg_jmrh_ota_cb_func(jmrh_ota_cb);
 
-	Set_DBG_Level(LEVEL0);
+	system("mount -o remount rw /media/card");
+
+	Set_DBG_Level(LEVEL2);
 	DBG_Init(0, 0, 0, 0, dbg_create_sem, dbg_wait_sem, dbg_post_sem, dbg_send, 0);
 	DBG_Print(LEVEL0, "Software:%s Compile @ %s %s\r\n", SOFTWARE_VERSION, __DATE__, __TIME__);
 
@@ -1714,6 +1737,7 @@ void start_tbox(void)
 			break;
 	} while (emmc_flag == 0);
 	icount = 0;
+
 	// write_cfg_file();
 
 	while (open_uart(0, "/dev/ttyS1", 1000000, 8, 1, 'N', mcu_data_arrive))
@@ -1726,7 +1750,7 @@ void start_tbox(void)
 	pthread_create(&autosleep_tid, NULL, autosleep_proc, NULL);
 	pthread_create(&ntid, NULL, work_proc, NULL);
 	pthread_create(&at_tid, NULL, at_thread, NULL);
-	pthread_create(&wifi_tid, NULL, no_wifi_proc, NULL);
+	pthread_create(&wifi_tid, NULL, wifi_proc, NULL);
 
 	pthread_create(&tcp_send_tid, NULL, tcp_send_thread, 0);
 	pthread_create(&tcp_recv_tid, NULL, tcp_recv_thread, 0);

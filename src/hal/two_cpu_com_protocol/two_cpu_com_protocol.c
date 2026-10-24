@@ -56,7 +56,7 @@ static void *find_sub_str(void *pbuf, unsigned int ulBufLen,
 		return 0;
 	}
 
-	for (i = 0; i < ulBufLen; i++)
+	for (i = 0; (i + ulSubStrLen) <= ulBufLen; i++)
 	{
 		if (*(pSrc + i) == *pSubStr) // �ҵ���һ���ֽ�
 		{
@@ -99,16 +99,16 @@ unsigned int tccp_pack(unsigned short msgid, void *content, unsigned int content
 	ptr[len++] = (unsigned char)(msgid & 0x00FF);
 
 	// ÊýŸÝ³€¶È
+	if (contentlen >= (outbuflen - TCCP_PACK_MIN_LEN))
+	{
+		contentlen = outbuflen - TCCP_PACK_MIN_LEN;
+	}
 	ptr[len++] = contentlen >> 8;
 	ptr[len++] = (unsigned char)(contentlen & 0x00FF);
 
 	// ÊýŸÝÄÚÈÝ
 	if (contentlen && content)
 	{
-		if (contentlen >= (outbuflen - TCCP_PACK_MIN_LEN))
-		{
-			contentlen = outbuflen - TCCP_PACK_MIN_LEN;
-		}
 		if (contentlen)
 			memcpy(ptr + len, content, contentlen);
 		len += contentlen;
@@ -222,8 +222,12 @@ int tccp_unpack(void *pdat, unsigned int len,
 			break;
 		}
 
+		if ((unsigned int)(pHead - pTemp) + TCCP_PACK_MIN_LEN > templen)
+		{
+			break;
+		}
 		packlen = TCCP_GET_PACK_LEN(pHead);
-		if (packlen > templen)
+		if ((unsigned int)(pHead - pTemp) + packlen > templen)
 		{
 			if (pCallBackError)
 				pCallBackError(pHead, templen);
@@ -255,9 +259,9 @@ int tccp_unpack(void *pdat, unsigned int len,
 		}
 
 		/* ָ����� ����Ѱ������֡ͷ */
-		if (templen > packlen)
+		if (templen > ((unsigned int)(pHead - pTemp) + packlen))
 		{
-			templen -= packlen;
+			templen -= (unsigned int)(pHead - pTemp) + packlen;
 			pTemp = pHead + packlen;
 		}
 		else
@@ -311,8 +315,8 @@ unsigned int tccp_unpack1(void *pdat, unsigned int len,
 				{
 					pCallBackError(pTemp, templen);
 				}
-				pTemp = pHead;
 				templen = templen - (pHead - pTemp);
+				pTemp = pHead;
 				break;
 			}
 		}
@@ -360,7 +364,7 @@ unsigned int tccp_unpack1(void *pdat, unsigned int len,
 
 	if (templen)
 	{
-		memcpy(pdat, pTemp, templen);
+		memmove(pdat, pTemp, templen);
 	}
 	return templen;
 }

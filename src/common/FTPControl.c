@@ -284,12 +284,12 @@ int ftp_connect()
     int port = ftp_info.port;
     int ret;
 
-    printf("host: %s, port: %d, usr: %s pwd: %s\n", host, port, ftp_info.user, ftp_info.pwd);
+    DBG_Print(LEVEL0, "host: %s, port: %d, usr: %s pwd: %s\n", host, port, ftp_info.user, ftp_info.pwd);
     memset(&address, 0, sizeof(address));
 
     if ((ctrl_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        printf("create socket fail\n");
+        DBG_Print(LEVEL0, "create socket fail\n");
         return -1;
     }
     //struct timeval timeo = {10, 0};
@@ -323,7 +323,7 @@ int ftp_connect()
     if (ret == 0)
     {
         ftp_info.ctrl_sock = ctrl_sock;
-        printf("connect success immediately!\n");
+        DBG_Print(LEVEL0, "connect success immediately!\n");
         return 0;
     }
     
@@ -331,7 +331,7 @@ int ftp_connect()
     {
         int times = 0;
         //printf("errno == EINPROGRESS\n");
-        printf("Connecting...\n");
+        DBG_Print(LEVEL0, "Connecting...\n");
         while (1)
         {
             fd_set rfds, wfds;
@@ -356,7 +356,7 @@ int ftp_connect()
             }
             else if (selres == 0)
             {
-                printf("select time out\n");
+                DBG_Print(LEVEL0, "select time out\n");
                 ret = -1;
                 break;
             }
@@ -367,17 +367,17 @@ int ftp_connect()
                     connect(ctrl_sock, (struct sockaddr *)&address, sizeof(struct sockaddr_in));
                     if (errno == EISCONN)
                     {
-                        printf("EISCONN connect success.\n");
+                        DBG_Print(LEVEL0, "EISCONN connect success.\n");
                         ret = 0;
                     }
                     else if (errno == EINPROGRESS)
                     {
-                        printf("Connecting.....\n");
+                        DBG_Print(LEVEL0, "Connecting.....\n");
                         continue;
                     }
                     else
                     {
-                        printf("connect failed. errno = %d\n", errno);
+                        DBG_Print(LEVEL0, "connect failed. errno = %d\n", errno);
                         //printf("read: %d  write: %d\n", FD_ISSET(ctrl_sock, &rfds) , FD_ISSET(ctrl_sock, &wfds));
                         ret = -1;
                     }

@@ -487,6 +487,7 @@ void *at_thread(void *arg)
 
 		if ((get_run_time() - s_at1_cmd_time) >= 4)
 		{
+			/*
 			s_at_cnt++;
 			if (s_at_cnt <= 8)
 			{
@@ -495,7 +496,7 @@ void *at_thread(void *arg)
 				// send_at_cmd("ATI\r\n");
 				// send_at_cmd("AT+ICCID\r\n");
 			}
-
+			*/
 			send_at_cmd("AT+CSQ\r\n");
 			send_at_cmd("AT+CGATT?\r\n");
 			sms_proc();

@@ -454,7 +454,7 @@ INT8U XOR_Check(INT8U *pdat, INT32U len)
 ���ڲ���:
 		pOutBuf:�����ߴ���Ļ����� ���ڽ���pSubStr1��pSubStr2֮�������
 ����ֵ:��������򷵻�pSubStr1��ָ�� ���򷵻�NULL
-����ʾ����GetSubString("<ServerIP:192.168.1.19>","<ServerIP:",">",sub);
+����ʾ����GetSubString("<Server@IP:192.168.1.19>","<Server#IP:",">",sub);
 		ִ�н����sub = "192.168.1.19"
  */
 char *GetSubString(char *str, char *pSubStr1, char *pSubStr2, char *pOutBuf, unsigned int outbuflen)

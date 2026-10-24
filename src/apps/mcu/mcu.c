@@ -33,13 +33,14 @@ void send_msg_to_mcu(unsigned int msgid, void *content, unsigned int len)
 
 		// need sem
 		uart_send_bytes(0, sendbuf, rlen);
-
+		printf("[uart_send_bytes\r\n");
 		free(sendbuf);
 	}
 	else
 	{
 		printf("[send_msg_to_mcu]mem error\r\n");
 	}
+	printf("[uart_send_bytes end \r\n");
 }
 
 void mpu_ack_mcu(unsigned int msgid, void *content, unsigned int len)
@@ -1030,6 +1031,7 @@ unsigned int get_sandian_file_data(void *file_path, unsigned int offset, void *p
 	}
 }
 
+static unsigned int add_blind_data_online = 0;
 void analyze_mcu_data(unsigned int msgid, void *content, unsigned int contentlen)
 {
 
@@ -1063,9 +1065,11 @@ void analyze_mcu_data(unsigned int msgid, void *content, unsigned int contentlen
 			}
 			else
 			{
-				if (get_server_connect_status(ptr[0]) && (get_dbm() > -90))
+
+				if ((get_server_connect_status(ptr[0]) && (get_dbm() > -90)) && (get_data_send_len(ptr[0]) + contentlen < EVERY_DATA_SEND_BUF_LEN))
 				{
 					push_data_send_to_buffer(ptr[0], ptr + 1, contentlen - 1);
+					add_blind_data_online = 0;
 				}
 				else
 				{
@@ -1073,6 +1077,17 @@ void analyze_mcu_data(unsigned int msgid, void *content, unsigned int contentlen
 					if (get_blind_data_cnt(ptr[0]) < 200000)
 					{
 						create_blind_file(ptr[0], ptr + 1, contentlen - 1);
+					}
+
+					if ((ptr[0] == 0) && (get_server_connect_status(ptr[0]) && (get_dbm() > -90)))
+					{
+						add_blind_data_online++;
+						if (add_blind_data_online > 1000)
+						{
+							add_blind_data_online = 0;
+							system("sync");
+							system("reboot");
+						}
 					}
 				}
 			}
@@ -1917,7 +1932,7 @@ void send_heartbeat_to_mcu(void)
 	ptr[xlen++] = paramlen;
 	memcpy(ptr + xlen, SOFTWARE_VERSION, strlen(SOFTWARE_VERSION));
 	xlen += strlen(SOFTWARE_VERSION);
-
+#if 0
 	paramid = PARAM_ID_FROM_MPU_GPS_SPEED;
 	paramlen = 2;
 	dat = get_gps_speed();
@@ -1927,7 +1942,7 @@ void send_heartbeat_to_mcu(void)
 	ptr[xlen++] = paramlen;
 	ptr[xlen++] = dat >> 8;
 	ptr[xlen++] = dat;
-
+#endif
 	paramid = PARAM_ID_FROM_MPU_SIM_SIGNAL_STRENGTH;
 	paramlen = 2;
 	dat = 0 - get_dbm();
@@ -1937,7 +1952,7 @@ void send_heartbeat_to_mcu(void)
 	ptr[xlen++] = paramlen;
 	ptr[xlen++] = dat >> 8;
 	ptr[xlen++] = dat;
-
+#if 0
 	paramid = PARAM_ID_FROM_MPU_GAODU;
 	paramlen = 2;
 	dat = get_gps_gaodu();
@@ -1957,7 +1972,7 @@ void send_heartbeat_to_mcu(void)
 	ptr[xlen++] = paramlen;
 	ptr[xlen++] = dat >> 8;
 	ptr[xlen++] = dat;
-
+#endif
 	for (i = 0; i < 4; i++)
 	{
 		paramid = PARAM_ID_FROM_MPU_SERVER0_ADDR + (i * 2);
@@ -1992,7 +2007,7 @@ void send_heartbeat_to_mcu(void)
 		ptr[xlen++] = sysparam_get_serverport(i + 4) >> 8;
 		ptr[xlen++] = sysparam_get_serverport(i + 4);
 	}
-
+#if 0
 	paramid = PARAM_ID_FROM_MPU_GET_MCU_PARAM_SW;
 	paramlen = 1;
 	ptr[xlen++] = paramid >> 8;
@@ -2014,7 +2029,7 @@ void send_heartbeat_to_mcu(void)
 		xlen += 64;
 		s_public_key_report_flag = 1;
 	}
-
+#endif
 	if (1)
 	{
 		paramid = PARAM_ID_FROM_MPU_CHIP_ID;
@@ -2040,7 +2055,11 @@ void send_heartbeat_to_mcu(void)
 		ptr[xlen++] = templen >> 8;
 		ptr[xlen++] = templen;
 	}
+
+	usleep(100);
 	send_msg_to_mcu(TCCP_MPU_HEAT_MSG_ID, ptr, xlen);
+	usleep(100);
+	
 }
 
 void send_easy_change_param_to_mcu(void)
@@ -2072,6 +2091,7 @@ void send_online_msg_to_mcu(unsigned char channel)
 	unsigned char temp[2] = {0};
 	temp[0] = channel;
 	send_msg_to_mcu(TCCP_MPU_SEND_ONLINE_MSG_ID, temp, 1);
+	DBG_Print(LEVEL0, "send online msg to mcu!\n");
 }
 
 void net_data_arrive(unsigned char channel, void *pdat, unsigned int datlen)

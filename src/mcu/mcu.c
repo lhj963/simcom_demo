@@ -1886,7 +1886,6 @@ void monitor_mpu_time(void)
 		memcpy(s_last_time, pt, 6);
 	}
 }
-
 void send_heartbeat_to_mcu(void)
 {
 	unsigned int xlen = 0;
@@ -1925,7 +1924,7 @@ void send_heartbeat_to_mcu(void)
 	ptr[xlen++] = paramlen;
 	memcpy(ptr + xlen, SOFTWARE_VERSION, strlen(SOFTWARE_VERSION));
 	xlen += strlen(SOFTWARE_VERSION);
-
+#if 0
 	paramid = PARAM_ID_FROM_MPU_GPS_SPEED;
 	paramlen = 2;
 	dat = get_gps_speed();
@@ -1935,7 +1934,7 @@ void send_heartbeat_to_mcu(void)
 	ptr[xlen++] = paramlen;
 	ptr[xlen++] = dat >> 8;
 	ptr[xlen++] = dat;
-
+#endif
 	paramid = PARAM_ID_FROM_MPU_SIM_SIGNAL_STRENGTH;
 	paramlen = 2;
 	dat = 0 - get_dbm();
@@ -1945,7 +1944,7 @@ void send_heartbeat_to_mcu(void)
 	ptr[xlen++] = paramlen;
 	ptr[xlen++] = dat >> 8;
 	ptr[xlen++] = dat;
-
+#if 0
 	paramid = PARAM_ID_FROM_MPU_GAODU;
 	paramlen = 2;
 	dat = get_gps_gaodu();
@@ -1965,7 +1964,7 @@ void send_heartbeat_to_mcu(void)
 	ptr[xlen++] = paramlen;
 	ptr[xlen++] = dat >> 8;
 	ptr[xlen++] = dat;
-
+#endif
 	for (i = 0; i < 4; i++)
 	{
 		paramid = PARAM_ID_FROM_MPU_SERVER0_ADDR + (i * 2);
@@ -2000,7 +1999,7 @@ void send_heartbeat_to_mcu(void)
 		ptr[xlen++] = sysparam_get_serverport(i + 4) >> 8;
 		ptr[xlen++] = sysparam_get_serverport(i + 4);
 	}
-
+#if 0
 	paramid = PARAM_ID_FROM_MPU_GET_MCU_PARAM_SW;
 	paramlen = 1;
 	ptr[xlen++] = paramid >> 8;
@@ -2022,16 +2021,17 @@ void send_heartbeat_to_mcu(void)
 		xlen += 64;
 		s_public_key_report_flag = 1;
 	}
-
+#endif
 	if (1)
 	{
+/*
 		paramid = PARAM_ID_FROM_MPU_CHIP_ID;
 		paramlen = 16;
 		ptr[xlen++] = paramid >> 8;
 		ptr[xlen++] = paramid;
 		ptr[xlen++] = paramlen >> 8;
 		ptr[xlen++] = paramlen;
-
+*/
 		memcpy(ptr + xlen, sysparam_get_jiami_chip_id(), 16);
 		xlen += 16;
 
@@ -2049,7 +2049,9 @@ void send_heartbeat_to_mcu(void)
 		ptr[xlen++] = templen;
 	}
 
+	usleep(100);
 	send_msg_to_mcu(TCCP_MPU_HEAT_MSG_ID, ptr, xlen);
+	usleep(100);
 }
 
 void send_easy_change_param_to_mcu(void)

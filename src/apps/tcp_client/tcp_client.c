@@ -108,11 +108,10 @@ int ls_poc_create_tcp_connect(char *server, unsigned int port)
     s_add.sin_addr.s_addr = inet_addr(szip);
     s_add.sin_port = htons(portnum);
 
-    // printf("s_addr = %#x ,port : %#x\r\n",s_add.sin_addr.s_addr,s_add.sin_port);
     if (connect(cfd, (struct sockaddr *)(&s_add), sizeof(struct sockaddr)) < 0)
     {
         close(cfd);
-        DBG_Print(LEVEL2, "connect fail !\r\n");
+        DBG_Print(LEVEL2, " connect fail s_addr = %s ,port : %d\r\n", server, port);
         return -1;
     }
     return cfd;
@@ -370,7 +369,6 @@ void *tcp_connect_thread(void *parg)
     unsigned long last_connect_tcp_time[9] = {0};
     unsigned char *pt = get_rtc_time();
     ftp_init(ls_poc_create_tcp_connect, (int (*)(int, void *, unsigned int))write, read, bind_port_and_listen, myaccept);
-
     while (1)
     {
         pt = get_rtc_time();
@@ -380,6 +378,7 @@ void *tcp_connect_thread(void *parg)
             {
                 if (get_server_change_flag(channel))
                 {
+                    DBG_Print(LEVEL0, "server change flag connect:[%d],time:%u\n", channel, (unsigned int)get_run_time());
                     if (s_socketfd[channel] > 0)
                     {
                         close(s_socketfd[channel]);
@@ -396,13 +395,9 @@ void *tcp_connect_thread(void *parg)
                     if ((get_run_time() - last_connect_tcp_time[channel]) >= connect_time_threshold[channel])
                     {
                         sleep(2);
-                        DBG_Print(LEVEL2, "4start connect[%d],time:%u\n", channel, (unsigned int)get_run_time());
-                        DBG_Print(LEVEL2, "<server%u:%s:%u %s (%u)> \r\n", channel, sysparam_get_serveraddr(channel), sysparam_get_serverport(channel),
-                                  get_server_connect_status(channel) ? "connected" : "disconnect", get_blind_data_cnt(channel));
                         last_connect_tcp_time[channel] = get_run_time();
-                        // s_socketfd[channel] = unblock_connect(sysparam_get_serveraddr(channel),sysparam_get_serverport(channel),25);
                         s_socketfd[channel] = ls_poc_create_tcp_connect(sysparam_get_serveraddr(channel), sysparam_get_serverport(channel));
-                        DBG_Print(LEVEL2, "end connect[%d][socket:%d],time:%u\n", channel, s_socketfd[channel], (unsigned int)get_run_time());
+                        DBG_Print(LEVEL0, "end connect[%d][socket:%d],time:%u\n", channel, s_socketfd[channel], (unsigned int)get_run_time());
                         if (s_socketfd[channel] > 0)
                         {
                             set_server_connect_status(channel, 1);
@@ -435,11 +430,9 @@ void *tcp_connect_special_thread(void *parg)
     {
         if (get_ppp_status(0))
         {
-
             sleep(2);
             for (channel = 7; channel < 9; channel++)
             {
-                // DBG_Print(LEVEL2, "tcp_connect_special_thread,channel:%d,status:%d \r\n", channel, get_server_connect_status(channel));
                 if (get_server_change_flag(channel))
                 {
                     if (s_socketfd[channel] > 0)
@@ -449,7 +442,6 @@ void *tcp_connect_special_thread(void *parg)
                     s_socketfd[channel] = -1;
                     set_server_change_flag(channel, 0);
                     set_server_connect_status(channel, 0);
-                    send_offline_msg_to_mcu(channel);
                 }
 
                 if (sysparam_get_serverport(channel) && (s_socketfd[channel] <= 0) && (((channel == 7) && get_wifi_client_status()) || (channel != 7)))
@@ -459,19 +451,14 @@ void *tcp_connect_special_thread(void *parg)
                     {
                         sleep(2);
                         last_connect_tcp_time[channel] = get_run_time();
-                        DBG_Print(LEVEL2, "<server%u:%s:%u %s (%u)> \r\n", channel, sysparam_get_serveraddr(channel), sysparam_get_serverport(channel),
-                                  get_server_connect_status(channel) ? "connected" : "disconnect", get_blind_data_cnt(channel));
-                        // s_socketfd[channel] = unblock_connect(sysparam_get_serveraddr(channel),sysparam_get_serverport(channel),25);
                         s_socketfd[channel] = ls_poc_create_tcp_connect(sysparam_get_serveraddr(channel), sysparam_get_serverport(channel));
                         if (s_socketfd[channel] > 0)
                         {
-                            set_server_connect_status(channel, 1);
-                            send_online_msg_to_mcu(channel);
+                            DBG_Print(LEVEL3, "channel : %d connect success!!!\r\n", channel);
                         }
                         else
                         {
-                            set_server_connect_status(channel, 0);
-                            send_offline_msg_to_mcu(channel);
+                            DBG_Print(LEVEL3, "channel : %d connect failed!!!\r\n", channel);
                         }
                     }
                 }
@@ -533,7 +520,7 @@ void *tcp_send_thread(void *parg)
                             s_socketfd[channel] = -1;
                             send_offline_msg_to_mcu(channel);
 
-                            DBG_Print(LEVEL2, "server_connect_status disconnect channel[%d]", channel);
+                            DBG_Print(LEVEL0, "server_connect_status disconnect channel[%d]", channel);
 
                             if (channel != 4)
                                 create_blind_file(channel, p_send_buffer, send_length);
@@ -564,6 +551,7 @@ void *tcp_send_thread(void *parg)
                             blind_proc(channel, s_socketfd[channel]);
                             if (get_server_connect_status(channel) == 0)
                             {
+                                DBG_Print(LEVEL0, "blind proc disconnect channel[%d]", channel);
                                 close(s_socketfd[channel]);
                                 s_socketfd[channel] = -1;
                                 send_offline_msg_to_mcu(channel);
@@ -690,24 +678,6 @@ void *tcp_recv_thread(void *parg)
             {
                 DBG_PrintEx(LEVEL1, "/data/error.txt", "tcp select error\r\n", strlen("tcp select error\r\n"));
                 s_select_flag = 1;
-            }
-        }
-
-        if (get_ppp_status(0) != s_last_ppp_status)
-        {
-            s_last_ppp_status = get_ppp_status(0);
-            if (get_ppp_status(0) == 0)
-            {
-                for (channel = 0; channel < 9; channel++)
-                {
-                    if (s_socketfd[channel] > 0)
-                    {
-                        set_server_connect_status(channel, 0);
-                        close(s_socketfd[channel]);
-                        s_socketfd[channel] = -1;
-                        send_offline_msg_to_mcu(channel);
-                    }
-                }
             }
         }
     }

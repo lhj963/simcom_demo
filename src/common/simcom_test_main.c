@@ -32,7 +32,7 @@
 #include "ALSAControl.h"
 #include "DEVControl.h"
 #include "FTPControl.h"
-//#include "GPSControl.h"
+// #include "GPSControl.h"
 #include "GpioControl.h"
 #include "PBControl.h"
 #include "I2C.h"
@@ -51,7 +51,6 @@
 #include "sms_message_gsm.h"
 #include "SystemControl.h"
 #include "EcallControl.h"
-
 
 #define SIG SIGALRM
 
@@ -114,8 +113,6 @@ static void simcom_dmz_test();
 #define SIMCOMDEMO_TRUE 0
 #define MAX_SCAN_LENGTH 128
 
-
-
 void print_option_menu(const char *options_list[], int array_size)
 {
     int i, j;
@@ -145,7 +142,7 @@ void simcom_show_data_call_info(data_call_info_t *data_call_info)
     char tmp3[MAX_STR_LEN] = {0};
     char tmp4[MAX_STR_LEN] = {0};
 
-    if (ptr == data_call_info) 
+    if (ptr == data_call_info)
     {
         printf("exit show_data_call_info: input data_call_response is NULL\n");
         return;
@@ -156,18 +153,18 @@ void simcom_show_data_call_info(data_call_info_t *data_call_info)
     }
 
     printf("show_data_call_info: START\n");
-    
+
     printf("cid:%d,status:%d,type:%d,suggestedRetryTime:%d,apn:[%s], netif=%s\n", ptr->cid, ptr->status,
-            ptr->ip_type, ptr->suggested_retry_time, ptr->apn, ptr->netif);
-    
+           ptr->ip_type, ptr->suggested_retry_time, ptr->apn, ptr->netif);
+
     inet_ntop(AF_INET, &(ptr->ipv4_info.ip_addr), tmp0, MAX_STR_LEN);
     inet_ntop(AF_INET, &(ptr->ipv4_info.primary_dns), tmp1, MAX_STR_LEN);
     inet_ntop(AF_INET, &(ptr->ipv4_info.secondary_dns), tmp2, MAX_STR_LEN);
     inet_ntop(AF_INET, &(ptr->ipv4_info.gateway), tmp3, MAX_STR_LEN);
     inet_ntop(AF_INET, &(ptr->ipv4_info.netmask), tmp4, MAX_STR_LEN);
 
-    printf("IPV4:ip_addr:%s,primary_dns:%s,secondary_dns:%s,gateway:%s,netmask:%s\n", 
-        tmp0, tmp1, tmp2, tmp3, tmp4);
+    printf("IPV4:ip_addr:%s,primary_dns:%s,secondary_dns:%s,gateway:%s,netmask:%s\n",
+           tmp0, tmp1, tmp2, tmp3, tmp4);
 
     memset(tmp0, 0x00, MAX_STR_LEN);
     memset(tmp1, 0x00, MAX_STR_LEN);
@@ -180,11 +177,10 @@ void simcom_show_data_call_info(data_call_info_t *data_call_info)
     inet_ntop(AF_INET6, &(ptr->ipv6_info.gateway), tmp3, MAX_STR_LEN);
     inet_ntop(AF_INET6, &(ptr->ipv6_info.netmask), tmp4, MAX_STR_LEN);
 
-    printf("IPV6:ipv6_addr:%s,primary_dns:%s,secondary_dns:%s,gateway:%s,netmask:%s\n", 
-        tmp0, tmp1, tmp2, tmp3, tmp4);
-    
-    printf("show_data_call_info: END\n");
+    printf("IPV6:ipv6_addr:%s,primary_dns:%s,secondary_dns:%s,gateway:%s,netmask:%s\n",
+           tmp0, tmp1, tmp2, tmp3, tmp4);
 
+    printf("show_data_call_info: END\n");
 }
 
 int input_digitalized_check(char *input, int input_len)
@@ -195,9 +191,9 @@ int input_digitalized_check(char *input, int input_len)
         i++;
     }
 
-    for(; i < input_len; i++)
+    for (; i < input_len; i++)
     {
-        if(input[i] > '9' || input[i] < '0')
+        if (input[i] > '9' || input[i] < '0')
         {
             return -1;
         }
@@ -408,7 +404,7 @@ void simcom_test_main()
             break;
         case 22:
 #ifdef FEATURE_DEMO_ETH
-printf("\r\n please refer to simcometh source code\n");
+            printf("\r\n please refer to simcometh source code\n");
 #else
             printf("ETH Not supported Now...\n");
 #endif
@@ -495,7 +491,6 @@ printf("\r\n please refer to simcometh source code\n");
     }
 }
 
-
 #ifdef FEATURE_DEMO_LBS
 void simcom_lbs_test()
 {
@@ -529,14 +524,10 @@ void simcom_lbs_test()
         {
             memset(&lbs_info, 0x00, sizeof(simcom_lbs_info_t));
             error_code = simcom_lbs_get_info(&lbs_info);
-            if ((error_code == SIMCOM_LBS_CODE_DEFUALT_VALUE)
-             || (error_code == SIMCOM_LBS_CODE_SUCC_ERROR)
-             || (error_code == SIMCOM_LBS_CODE_LBS_ERROR_SUCCESS)
-             || (error_code == SIMCOM_LBS_CODE_LBS_PARAMETER_ERR)
-             || (error_code == SIMCOM_LBS_CODE_LBS_ERROR_FAILED))
+            if ((error_code == SIMCOM_LBS_CODE_DEFUALT_VALUE) || (error_code == SIMCOM_LBS_CODE_SUCC_ERROR) || (error_code == SIMCOM_LBS_CODE_LBS_ERROR_SUCCESS) || (error_code == SIMCOM_LBS_CODE_LBS_PARAMETER_ERR) || (error_code == SIMCOM_LBS_CODE_LBS_ERROR_FAILED))
             {
-                printf("+CLBS: %d,%f,%f,%u,%s\n", error_code, lbs_info.fLatitude,lbs_info.fLongitude,
-                                    lbs_info.u16accuracy, lbs_info.u8DateTime);
+                printf("+CLBS: %d,%f,%f,%u,%s\n", error_code, lbs_info.fLatitude, lbs_info.fLongitude,
+                       lbs_info.u16accuracy, lbs_info.u8DateTime);
             }
             else
             {
@@ -549,11 +540,7 @@ void simcom_lbs_test()
         {
             memset(&lbs_info, 0x00, sizeof(simcom_lbs_info_t));
             error_code = simcom_lbs_get_info(&lbs_info);
-            if ((error_code == SIMCOM_LBS_CODE_DEFUALT_VALUE)
-             || (error_code == SIMCOM_LBS_CODE_SUCC_ERROR)
-             || (error_code == SIMCOM_LBS_CODE_LBS_ERROR_SUCCESS)
-             || (error_code == SIMCOM_LBS_CODE_LBS_PARAMETER_ERR)
-             || (error_code == SIMCOM_LBS_CODE_LBS_ERROR_FAILED))
+            if ((error_code == SIMCOM_LBS_CODE_DEFUALT_VALUE) || (error_code == SIMCOM_LBS_CODE_SUCC_ERROR) || (error_code == SIMCOM_LBS_CODE_LBS_ERROR_SUCCESS) || (error_code == SIMCOM_LBS_CODE_LBS_PARAMETER_ERR) || (error_code == SIMCOM_LBS_CODE_LBS_ERROR_FAILED))
             {
                 printf("+CLBS: %d,%s\n", error_code, lbs_info.u8LocAddress);
             }
@@ -562,12 +549,11 @@ void simcom_lbs_test()
                 printf("+CLBS: %d", error_code);
             }
         }
-        break;       
+        break;
 
         default:
             break;
         }
-
 
         if (opt == 99)
         {
@@ -621,7 +607,7 @@ static void simcom_datacall_test()
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 break;
 
-            if (strlen(scan_string) ==0 || strlen(scan_string) >= 32)
+            if (strlen(scan_string) == 0 || strlen(scan_string) >= 32)
             {
                 printf("input param error\n");
                 break;
@@ -631,14 +617,13 @@ static void simcom_datacall_test()
                 scan_string[strlen(scan_string) - 1] = '\0';
             }
             strncpy(apn_info.apn, scan_string, WDS_MAX_STR_LEN);
-            
 
             printf("\nPlease input ip type:0-IPV4V6 1-IPV4 2-IPV6 >");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 break;
 
-            if (strlen(scan_string) ==0)
+            if (strlen(scan_string) == 0)
             {
                 printf("input param error\n");
                 break;
@@ -647,13 +632,11 @@ static void simcom_datacall_test()
             {
                 scan_string[strlen(scan_string) - 1] = '\0';
             }
-            
+
             apn_info.ip_type = atoi(scan_string);
-            if (apn_info.ip_type == WDS_PDP_IP_TYPE_IPV4V6
-             || apn_info.ip_type == WDS_PDP_IP_TYPE_IPV4
-             || apn_info.ip_type == WDS_PDP_IP_TYPE_IPV6)
+            if (apn_info.ip_type == WDS_PDP_IP_TYPE_IPV4V6 || apn_info.ip_type == WDS_PDP_IP_TYPE_IPV4 || apn_info.ip_type == WDS_PDP_IP_TYPE_IPV6)
             {
-                //do nothing
+                // do nothing
             }
             else
             {
@@ -665,7 +648,7 @@ static void simcom_datacall_test()
             set_initial_attach_apn(apn_info);
         }
         break;
-        
+
         case 2: /* start data call */
         {
             int cid;
@@ -688,7 +671,7 @@ static void simcom_datacall_test()
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 break;
 
-            if (strlen(scan_string) ==0 || strlen(scan_string) >= 32)
+            if (strlen(scan_string) == 0 || strlen(scan_string) >= 32)
             {
                 printf("input param error\n");
                 break;
@@ -698,14 +681,13 @@ static void simcom_datacall_test()
                 scan_string[strlen(scan_string) - 1] = '\0';
             }
             strncpy(apn_info.apn, scan_string, WDS_MAX_STR_LEN);
-            
 
             printf("\nPlease input ip type:0-IPV4V6 1-IPV4 2-IPV6 >");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 break;
 
-            if (strlen(scan_string) ==0)
+            if (strlen(scan_string) == 0)
             {
                 printf("input param error\n");
                 break;
@@ -714,26 +696,24 @@ static void simcom_datacall_test()
             {
                 scan_string[strlen(scan_string) - 1] = '\0';
             }
-            
+
             apn_info.ip_type = atoi(scan_string);
-            if (apn_info.ip_type == WDS_PDP_IP_TYPE_IPV4V6
-             || apn_info.ip_type == WDS_PDP_IP_TYPE_IPV4
-             || apn_info.ip_type == WDS_PDP_IP_TYPE_IPV6)
+            if (apn_info.ip_type == WDS_PDP_IP_TYPE_IPV4V6 || apn_info.ip_type == WDS_PDP_IP_TYPE_IPV4 || apn_info.ip_type == WDS_PDP_IP_TYPE_IPV6)
             {
-                //do nothing
+                // do nothing
             }
             else
             {
                 printf("input param error\n");
                 break;
             }
-            
+
             apn_info.auth_type = WDS_PDP_AUTH_TYPE_NONE;
             active_data_call(cid, apn_info);
         }
         break;
         case 3: /* stop data call */
-        {            
+        {
             int cid;
             printf("\nPlease input profile index:\n");
             memset(scan_string, 0, sizeof(scan_string));
@@ -766,7 +746,7 @@ static void simcom_datacall_test()
             ret = query_data_call(&data_call_info);
             if (ret == 0)
             {
-                //hhhandle = callinfo.handle;
+                // hhhandle = callinfo.handle;
                 simcom_show_data_call_info(&data_call_info);
             }
         }
@@ -830,7 +810,7 @@ static void simcom_wds_test()
             {
                 printf("\nactive default pdp context failed\n");
             }
-            
+
             break;
         }
         case 2:
@@ -853,7 +833,7 @@ static void simcom_wds_test()
         {
             wds_apn_profile_info apn_info;
             memset(&apn_info, 0x00, sizeof(apn_info));
-            
+
             ret = get_apn_profile_info(&apn_info);
             if (ret == 0)
             {
@@ -877,7 +857,7 @@ static void simcom_wds_test()
             char apn_str[128] = {0};
             char username[128] = {0};
             char password[128] = {0};
-            
+
             memset(&apn_info, 0x00, sizeof(wds_apn_profile_info));
             memset(scan_string, 0, sizeof(scan_string));
             printf("\nPlease input ip_type:(0:IPV4V6 1:IPV4 2:IPV6)>");
@@ -940,9 +920,9 @@ static void simcom_wds_test()
                 }
             }
             strncpy(apn_info.password, password, WDS_MAX_STR_LEN);
-            
+
             apn_info.auth_type = WDS_PDP_AUTH_TYPE_NONE;
-        
+
             ret = set_apn_profile_info(apn_info);
             if (ret == 0)
             {
@@ -990,7 +970,7 @@ static void simcom_wds_test()
         case 7:
         {
             int auto_connect;
-        
+
             printf("\nPlease input ip_type:(0:Manual 1:Auto)>");
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -1003,7 +983,7 @@ static void simcom_wds_test()
                 printf("\nPlease enter the correct config:(0:Manual 1:Auto)\n");
                 break;
             }
-        
+
             ret = set_auto_connect_config(auto_connect);
             if (ret == 0)
             {
@@ -1015,7 +995,7 @@ static void simcom_wds_test()
             }
             break;
         }
-        
+
         case 99:
             break;
         default:
@@ -1035,7 +1015,7 @@ static int simcomvoice_get_call(uint8_t type, uint8_t *call_id)
 {
     int ret = -1;
     int i;
-    if (type == 0) //MO
+    if (type == 0) // MO
     {
         for (i = 0; i < call_info.call_num; i++)
         {
@@ -1047,7 +1027,7 @@ static int simcomvoice_get_call(uint8_t type, uint8_t *call_id)
             }
         }
     }
-    if (type == 1) //MT
+    if (type == 1) // MT
     {
         for (i = 0; i < call_info.call_num; i++)
         {
@@ -1059,7 +1039,7 @@ static int simcomvoice_get_call(uint8_t type, uint8_t *call_id)
             }
         }
     }
-    if (type == 2) //END
+    if (type == 2) // END
     {
         for (i = 0; i < call_info.call_num; i++)
         {
@@ -1089,7 +1069,7 @@ static void simcom_voice_test()
         "10. Send DTMF",
         "11. Get call infos",
         "12. Set audio device",
-		"13. Get call forward info",
+        "13. Get call forward info",
         "14. dective call forward",
         "15. active call forward",
         "16. regist call forward",
@@ -1101,7 +1081,7 @@ static void simcom_voice_test()
     char scan_string[100] = {0};
     uint8_t call_id;
 
-    if(voice_init(process_simcom_ind_message) != 0)
+    if (voice_init(process_simcom_ind_message) != 0)
     {
         printf("voice_init failed\n");
         return;
@@ -1120,7 +1100,7 @@ static void simcom_voice_test()
         opt = atoi(scan_string);
         switch (opt)
         {
-        case 1: //DIAL
+        case 1: // DIAL
         {
             get_all_call_info_msg(&call_info);
             if (simcomvoice_get_call(0, &call_id) == 0)
@@ -1134,7 +1114,7 @@ static void simcom_voice_test()
                 continue;
             scan_string[strlen(scan_string) - 1] = 0;
             int ret = voice_dial(scan_string);
-            if(ret != EXIT_SUCCESS)
+            if (ret != EXIT_SUCCESS)
             {
                 printf("voice_dial faild! ret = %d\n", ret);
             }
@@ -1144,7 +1124,7 @@ static void simcom_voice_test()
             }
         }
         break;
-        case 2: //ANSWER
+        case 2: // ANSWER
             printf("answer start");
             get_all_call_info_msg(&call_info);
             if (simcomvoice_get_call(1, &call_id) == -1)
@@ -1196,7 +1176,7 @@ static void simcom_voice_test()
                 }
             }
             break;
-        case 3: //END
+        case 3: // END
             get_all_call_info_msg(&call_info);
             if (simcomvoice_get_call(2, &call_id) == -1)
             {
@@ -1260,7 +1240,7 @@ static void simcom_voice_test()
             {
                 if (set_call_waiting(action) == EXIT_SUCCESS)
                 {
-                    printf("%s call waiting successfully\n",(action == 1 ? "enable":"disable"));
+                    printf("%s call waiting successfully\n", (action == 1 ? "enable" : "disable"));
                 }
                 else
                 {
@@ -1293,7 +1273,7 @@ static void simcom_voice_test()
         {
             int volume;
 
-            //volume
+            // volume
             printf("\nplease input volume,range[-36~12] >");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
@@ -1320,7 +1300,6 @@ static void simcom_voice_test()
             {
                 printf("set volume failed\n");
             }
-
         }
         break;
 
@@ -1328,7 +1307,7 @@ static void simcom_voice_test()
         {
             int volume;
 
-            //volume
+            // volume
             printf("\nplease input volume,range[-36~12] >");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
@@ -1355,7 +1334,6 @@ static void simcom_voice_test()
             {
                 printf("set volume failed\n");
             }
-
         }
         break;
 
@@ -1363,13 +1341,13 @@ static void simcom_voice_test()
         {
             int action;
 
-            //volume
+            // volume
             printf("\nplease input action:0-unmute 1:mute >");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
 
-            if(input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
+            if (input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
             {
                 printf("error input");
                 continue;
@@ -1390,7 +1368,6 @@ static void simcom_voice_test()
             {
                 printf("set mute failed\n");
             }
-
         }
         break;
 
@@ -1398,13 +1375,13 @@ static void simcom_voice_test()
         {
             int action;
 
-            //volume
+            // volume
             printf("\nplease input action:0-unmute 1:mute >");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
-            
-            if(input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
+
+            if (input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
             {
                 printf("error input");
                 continue;
@@ -1424,21 +1401,20 @@ static void simcom_voice_test()
             {
                 printf("set mute failed\n");
             }
-
         }
         break;
-        
+
         case 10:
         {
             int code;
 
-            //volume
+            // volume
             printf("\nplease input a DTMF (0,1,2,3,4,5,6,7,8,9,*,#,A,B,C,D) >");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
 
-            if (strlen(scan_string) > 2)//"1\n"
+            if (strlen(scan_string) > 2) //"1\n"
             {
                 printf("error input\n");
                 continue;
@@ -1460,66 +1436,66 @@ static void simcom_voice_test()
             int i = 0;
             memset(&call_info, 0x00, sizeof(simcom_voice_call_info));
             get_all_call_info_msg(&call_info);
-            if(call_info.call_num == 0)
+            if (call_info.call_num == 0)
             {
                 printf("No Call Info Now\n");
             }
-            for(i = 0; i < call_info.call_num; i++)
+            for (i = 0; i < call_info.call_num; i++)
             {
-                 if (call_info.call_info_list[i].index != 0) 
-                 {
-                     if (call_info.call_info_list[i].direction == VOICE_CALL_DIRECTION_MO)
-                     {
-                         printf("MO Call:", call_info.call_info_list[i].direction);
-                     }
-                     else if (call_info.call_info_list[i].direction == VOICE_CALL_DIRECTION_MT)
-                     {
-                         printf("MT Call:", call_info.call_info_list[i].direction);
-                     }
-                     else
-                     {
-                         printf("Direction[%d] Call:", call_info.call_info_list[i].direction);
-                     }
-            
-                     switch(call_info.call_info_list[i].state)
-                     {
-                         case VOICE_CALL_STATE_ACTIVE:
-                             printf("Call %s ACTIVE\n", call_info.call_info_list[i].number);
-                             break;
-                         case VOICE_CALL_STATE_HOLDING:
-                             printf("Call %s HOLDING\n", call_info.call_info_list[i].number);
-                             break;
-                         case VOICE_CALL_STATE_DIALING:
-                             printf("Call %s DIALING...\n", call_info.call_info_list[i].number);
-                             break;
-                         case  VOICE_CALL_STATE_ALERTING:
-                             printf("Call %s ALERTING\n", call_info.call_info_list[i].number);
-                             break;
-                         case VOICE_CALL_STATE_INCOMING:
-                             printf("Call %s INCOMING\n", call_info.call_info_list[i].number);
-                             break;
-                         case VOICE_CALL_STATE_WAITING:
-                             printf("Call %s WAITING\n", call_info.call_info_list[i].number);
-                             break;
-                         case VOICE_CALL_STATE_OFFERING:
-                             printf("Call %s OFFERING\n", call_info.call_info_list[i].number);
-                             break;
-                         case VOICE_CALL_STATE_DISCONNECTING:
-                             printf("Call %s DISCONNECTING\n", call_info.call_info_list[i].number);
-                             break;
-                         case VOICE_CALL_STATE_DISCONNECTED:
-                             printf("Call %s DISCONNECTED\n", call_info.call_info_list[i].number);
-                             break;
-                         default:
-                             printf("unprocess call_state %d\n", call_info.call_info_list[i].state);
-                             break;
-                     }
-                 }
-                 else
-                 {
-                     printf(">>>>>>voice callback\n");
-                 }
-             }
+                if (call_info.call_info_list[i].index != 0)
+                {
+                    if (call_info.call_info_list[i].direction == VOICE_CALL_DIRECTION_MO)
+                    {
+                        printf("MO Call:", call_info.call_info_list[i].direction);
+                    }
+                    else if (call_info.call_info_list[i].direction == VOICE_CALL_DIRECTION_MT)
+                    {
+                        printf("MT Call:", call_info.call_info_list[i].direction);
+                    }
+                    else
+                    {
+                        printf("Direction[%d] Call:", call_info.call_info_list[i].direction);
+                    }
+
+                    switch (call_info.call_info_list[i].state)
+                    {
+                    case VOICE_CALL_STATE_ACTIVE:
+                        printf("Call %s ACTIVE\n", call_info.call_info_list[i].number);
+                        break;
+                    case VOICE_CALL_STATE_HOLDING:
+                        printf("Call %s HOLDING\n", call_info.call_info_list[i].number);
+                        break;
+                    case VOICE_CALL_STATE_DIALING:
+                        printf("Call %s DIALING...\n", call_info.call_info_list[i].number);
+                        break;
+                    case VOICE_CALL_STATE_ALERTING:
+                        printf("Call %s ALERTING\n", call_info.call_info_list[i].number);
+                        break;
+                    case VOICE_CALL_STATE_INCOMING:
+                        printf("Call %s INCOMING\n", call_info.call_info_list[i].number);
+                        break;
+                    case VOICE_CALL_STATE_WAITING:
+                        printf("Call %s WAITING\n", call_info.call_info_list[i].number);
+                        break;
+                    case VOICE_CALL_STATE_OFFERING:
+                        printf("Call %s OFFERING\n", call_info.call_info_list[i].number);
+                        break;
+                    case VOICE_CALL_STATE_DISCONNECTING:
+                        printf("Call %s DISCONNECTING\n", call_info.call_info_list[i].number);
+                        break;
+                    case VOICE_CALL_STATE_DISCONNECTED:
+                        printf("Call %s DISCONNECTED\n", call_info.call_info_list[i].number);
+                        break;
+                    default:
+                        printf("unprocess call_state %d\n", call_info.call_info_list[i].state);
+                        break;
+                    }
+                }
+                else
+                {
+                    printf(">>>>>>voice callback\n");
+                }
+            }
         }
         break;
 
@@ -1527,13 +1503,13 @@ static void simcom_voice_test()
         {
             int type;
 
-            //volume
+            // volume
             printf("\nplease input audio device (0-EARPIECE,1-SPEAKER,2-HEADSET) >");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
-            
-            if(input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
+
+            if (input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
             {
                 printf("error input");
                 continue;
@@ -1567,13 +1543,13 @@ static void simcom_voice_test()
             {
                 continue;
             }
-            if(input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
+            if (input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
             {
                 printf("error input");
                 continue;
             }
             reason = atoi(scan_string);
-            if(get_callforward_info(reason, &info) == EXIT_SUCCESS)
+            if (get_callforward_info(reason, &info) == EXIT_SUCCESS)
             {
                 printf("status:%d, reason:%d, serviceClass:%d, number:%s\n", info.status, info.reason, info.serviceClass, info.number);
             }
@@ -1593,13 +1569,13 @@ static void simcom_voice_test()
             {
                 continue;
             }
-            if(input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
+            if (input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
             {
                 printf("error input");
                 continue;
             }
             reason = atoi(scan_string);
-            if(dective_callforward(reason) == EXIT_SUCCESS)
+            if (dective_callforward(reason) == EXIT_SUCCESS)
             {
                 printf("success\n");
             }
@@ -1619,13 +1595,13 @@ static void simcom_voice_test()
             {
                 continue;
             }
-            if(input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
+            if (input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
             {
                 printf("error input");
                 continue;
             }
             reason = atoi(scan_string);
-            if(active_callforward(reason) == EXIT_SUCCESS)
+            if (active_callforward(reason) == EXIT_SUCCESS)
             {
                 printf("success\n");
             }
@@ -1647,7 +1623,7 @@ static void simcom_voice_test()
             {
                 continue;
             }
-            if(input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
+            if (input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
             {
                 printf("error input");
                 continue;
@@ -1662,7 +1638,7 @@ static void simcom_voice_test()
             memcpy(number, scan_string, strlen(scan_string));
             number[strlen(number) - 1] = '\0';
             printf("number:%s, length:%d\n", number, strlen(number));
-            if(regist_callforward(reason, number) == EXIT_SUCCESS)
+            if (regist_callforward(reason, number) == EXIT_SUCCESS)
             {
                 printf("success\n");
             }
@@ -1682,13 +1658,13 @@ static void simcom_voice_test()
             {
                 continue;
             }
-            if(input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
+            if (input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
             {
                 printf("error input");
                 continue;
             }
             reason = atoi(scan_string);
-            if(erase_callforward(reason) == EXIT_SUCCESS)
+            if (erase_callforward(reason) == EXIT_SUCCESS)
             {
                 printf("success\n");
             }
@@ -1717,85 +1693,84 @@ int radio_tech_type_to_network_type(RIL_RadioTechnology netState)
 {
     switch (netState)
     {
-        case RADIO_TECH_GPRS:
-        case RADIO_TECH_EDGE:
-        case RADIO_TECH_IS95A:
-        case RADIO_TECH_IS95B:
-        case RADIO_TECH_1xRTT:            
-        case RADIO_TECH_GSM:        
-            return 2;//2G
-        case RADIO_TECH_UMTS:
-        case RADIO_TECH_EVDO_0:
-        case RADIO_TECH_EVDO_A:
-        case RADIO_TECH_HSDPA:
-        case RADIO_TECH_HSUPA:
-        case RADIO_TECH_HSPA:
-        case RADIO_TECH_EVDO_B:
-        case RADIO_TECH_EHRPD:
-        case RADIO_TECH_HSPAP:
-        case RADIO_TECH_TD_SCDMA:
-        case RADIO_TECH_DC_HSPA:
-            return 3;//3G
-        case RADIO_TECH_LTE:
-        case RADIO_TECH_LTEP:
-            return 4;//4G
-        case RADIO_TECH_IWLAN:
-        default:
-            return 0;
-    } 
+    case RADIO_TECH_GPRS:
+    case RADIO_TECH_EDGE:
+    case RADIO_TECH_IS95A:
+    case RADIO_TECH_IS95B:
+    case RADIO_TECH_1xRTT:
+    case RADIO_TECH_GSM:
+        return 2; // 2G
+    case RADIO_TECH_UMTS:
+    case RADIO_TECH_EVDO_0:
+    case RADIO_TECH_EVDO_A:
+    case RADIO_TECH_HSDPA:
+    case RADIO_TECH_HSUPA:
+    case RADIO_TECH_HSPA:
+    case RADIO_TECH_EVDO_B:
+    case RADIO_TECH_EHRPD:
+    case RADIO_TECH_HSPAP:
+    case RADIO_TECH_TD_SCDMA:
+    case RADIO_TECH_DC_HSPA:
+        return 3; // 3G
+    case RADIO_TECH_LTE:
+    case RADIO_TECH_LTEP:
+        return 4; // 4G
+    case RADIO_TECH_IWLAN:
+    default:
+        return 0;
+    }
 
     return 0;
 }
 
-char * radio_tech_type_to_string(RIL_RadioTechnology netState)
+char *radio_tech_type_to_string(RIL_RadioTechnology netState)
 {
     switch (netState)
     {
-        case RADIO_TECH_GPRS:
-            return "GPRS";
-        case RADIO_TECH_EDGE:
-            return "EDGE";
-        case RADIO_TECH_UMTS:
-            return "UMTS";
-        case RADIO_TECH_IS95A:
-            return "IS95A";
-        case RADIO_TECH_IS95B:
-            return "IS95B";
-        case RADIO_TECH_1xRTT:
-            return "1xRTT";
-        case RADIO_TECH_EVDO_0:
-            return "EVDO_0";
-        case RADIO_TECH_EVDO_A:
-            return "EVDO_A";
-        case RADIO_TECH_HSDPA:
-            return "HSDPA";
-        case RADIO_TECH_HSUPA:
-            return "HSUPA";
-        case RADIO_TECH_HSPA:
-            return "HSPA";
-        case RADIO_TECH_EVDO_B:
-            return "EVDO_B";
-        case RADIO_TECH_EHRPD:
-            return "EHRPD";
-        case RADIO_TECH_LTE:
-            return "LTE";
-        case RADIO_TECH_HSPAP:
-            return "HSPAP";
-        case RADIO_TECH_GSM:
-            return "GSM";
-        case RADIO_TECH_TD_SCDMA:
-            return "TD_SCDMA";
-        case RADIO_TECH_IWLAN:
-            return "IWLAN";
-        case RADIO_TECH_LTEP:
-            return "LTEP";
-        case RADIO_TECH_DC_HSPA:
-            return "DC_HSPA";
-        default:
-            return "Unknown";
+    case RADIO_TECH_GPRS:
+        return "GPRS";
+    case RADIO_TECH_EDGE:
+        return "EDGE";
+    case RADIO_TECH_UMTS:
+        return "UMTS";
+    case RADIO_TECH_IS95A:
+        return "IS95A";
+    case RADIO_TECH_IS95B:
+        return "IS95B";
+    case RADIO_TECH_1xRTT:
+        return "1xRTT";
+    case RADIO_TECH_EVDO_0:
+        return "EVDO_0";
+    case RADIO_TECH_EVDO_A:
+        return "EVDO_A";
+    case RADIO_TECH_HSDPA:
+        return "HSDPA";
+    case RADIO_TECH_HSUPA:
+        return "HSUPA";
+    case RADIO_TECH_HSPA:
+        return "HSPA";
+    case RADIO_TECH_EVDO_B:
+        return "EVDO_B";
+    case RADIO_TECH_EHRPD:
+        return "EHRPD";
+    case RADIO_TECH_LTE:
+        return "LTE";
+    case RADIO_TECH_HSPAP:
+        return "HSPAP";
+    case RADIO_TECH_GSM:
+        return "GSM";
+    case RADIO_TECH_TD_SCDMA:
+        return "TD_SCDMA";
+    case RADIO_TECH_IWLAN:
+        return "IWLAN";
+    case RADIO_TECH_LTEP:
+        return "LTEP";
+    case RADIO_TECH_DC_HSPA:
+        return "DC_HSPA";
+    default:
+        return "Unknown";
     }
 }
-
 
 int app_nas_printf_serving_system(SIM_NetState serving_system)
 {
@@ -1850,27 +1825,27 @@ int app_nas_printf_serving_system(SIM_NetState serving_system)
     }
 
     printf("RADIO TECH TYPE: %s\n", radio_tech_type_to_string(serving_system.netState));
-    printf("NETWORK TYPE: %dG\n", radio_tech_type_to_network_type(serving_system.netState));    
+    printf("NETWORK TYPE: %dG\n", radio_tech_type_to_network_type(serving_system.netState));
 }
 
 int app_nas_printf_phonemode(int phone_mode)
 {
-    static char* phone_mode_map[] =
-    {
-        "online",
-        "low power",
-        "factory mode",
-        "persistent low power",
-        "offline",
-    };
+    static char *phone_mode_map[] =
+        {
+            "online",
+            "low power",
+            "factory mode",
+            "persistent low power",
+            "offline",
+        };
 
-    if(phone_mode < 0 || phone_mode >= 5)
+    if (phone_mode < 0 || phone_mode >= 5)
     {
         printf("error phone mode");
         return -1;
     }
 
-    printf("phone mode:%d(%s)",phone_mode,phone_mode_map[phone_mode]);
+    printf("phone mode:%d(%s)", phone_mode, phone_mode_map[phone_mode]);
 }
 
 int app_nas_printf_cell_info(CellInfo_Node *cellinfo_head)
@@ -1878,105 +1853,102 @@ int app_nas_printf_cell_info(CellInfo_Node *cellinfo_head)
     CellInfo_Node *pos = cellinfo_head;
     if (pos == NULL)
     {
-        printf("%d,info is NULL\n",__LINE__);
+        printf("%d,info is NULL\n", __LINE__);
         return -1;
     }
 
-    static char* cellinfo_type_map[] =
-	{
-	    "ERROR",
-        "GSM",
-		"CDMA",
-		"LTE",
-		"WCDMA",
-		"TD_SCDMA"
-	};
-
-    static char* timestamp_type_map[] =
-	{
-	    "UNKNOWN",
-        "ANTENNA",
-		"MODEM",
-		"OEM_RIL",
-		"JAVA_RIL"
-	};
-    printf("===============cell info===============\n");
-    while(pos)
-    {
-        printf("cellInfoType:%s\n",cellinfo_type_map[pos->cellinfo.cellInfoType]);
-        printf("registered:%s\n",pos->cellinfo.registered ? "serving cell":"neighbor cell");
-        printf("timeStampType:%s\n",timestamp_type_map[pos->cellinfo.timeStampType]);
-        printf("timeStamp:%d\n",pos->cellinfo.timeStampType);
-        switch(pos->cellinfo.cellInfoType)
+    static char *cellinfo_type_map[] =
         {
-            case RIL_CELL_INFO_TYPE_GSM:
-            {
-                printf("mcc:%d ",pos->cellinfo.CellInfo.gsm.cellIdentityGsm.mcc);
-                printf("mnc:%d ",pos->cellinfo.CellInfo.gsm.cellIdentityGsm.mnc);
-                printf("lac:%d ",pos->cellinfo.CellInfo.gsm.cellIdentityGsm.lac);
-                printf("cid:%d ",pos->cellinfo.CellInfo.gsm.cellIdentityGsm.cid);
-                printf("signalStrength:%d ",pos->cellinfo.CellInfo.gsm.signalStrengthGsm.signalStrength);
-                printf("bitErrorRate:%d ",pos->cellinfo.CellInfo.gsm.signalStrengthGsm.bitErrorRate);
-                printf("rscpdbm:%d ",pos->cellinfo.CellInfo.gsm.signalStrengthGsm.rscpdbm);
-                printf("eciodb:%d\n",pos->cellinfo.CellInfo.gsm.signalStrengthGsm.eciodb);
+            "ERROR",
+            "GSM",
+            "CDMA",
+            "LTE",
+            "WCDMA",
+            "TD_SCDMA"};
 
-            }
-            break;
-            case RIL_CELL_INFO_TYPE_CDMA:
-            {
-                printf("networkId:%d ",pos->cellinfo.CellInfo.cdma.cellIdentityCdma.networkId);
-                printf("systemId:%d ",pos->cellinfo.CellInfo.cdma.cellIdentityCdma.systemId);
-                printf("basestationId:%d ",pos->cellinfo.CellInfo.cdma.cellIdentityCdma.basestationId);
-                printf("longitude:%d ",pos->cellinfo.CellInfo.cdma.cellIdentityCdma.longitude);
-                printf("latitude:%d ",pos->cellinfo.CellInfo.cdma.cellIdentityCdma.latitude);
-                printf("Cdma_dbm:%d ",pos->cellinfo.CellInfo.cdma.signalStrengthCdma.dbm);
-                printf("Cdma_ecio:%d ",pos->cellinfo.CellInfo.cdma.signalStrengthCdma.ecio);
-                printf("Evdo_dbm:%d ",pos->cellinfo.CellInfo.cdma.signalStrengthEvdo.dbm);
-                printf("Evdo_ecio:%d ",pos->cellinfo.CellInfo.cdma.signalStrengthEvdo.ecio);
-                printf("Evdo_signalNoiseRatio:%d\n",pos->cellinfo.CellInfo.cdma.signalStrengthEvdo.signalNoiseRatio);
-            }
-            break;
-            case RIL_CELL_INFO_TYPE_LTE:
-            {
-                printf("mcc:%d ",pos->cellinfo.CellInfo.lte.cellIdentityLte.mcc);
-                printf("mnc:%d ",pos->cellinfo.CellInfo.lte.cellIdentityLte.mnc);
-                printf("ci:%d ",pos->cellinfo.CellInfo.lte.cellIdentityLte.ci) ;
-                printf("pci:%d ",pos->cellinfo.CellInfo.lte.cellIdentityLte.pci);
-                printf("tac:%d ",pos->cellinfo.CellInfo.lte.cellIdentityLte.tac) ;
-                printf("signalStrength:%d ",pos->cellinfo.CellInfo.lte.signalStrengthLte.signalStrength) ;
-                printf("rsrp:%d ",pos->cellinfo.CellInfo.lte.signalStrengthLte.rsrp);
-                printf("rsrq:%d ",pos->cellinfo.CellInfo.lte.signalStrengthLte.rsrq) ;
-                printf("rssnr:%d ",pos->cellinfo.CellInfo.lte.signalStrengthLte.rssnr);
-                printf("cqi:%d ",pos->cellinfo.CellInfo.lte.signalStrengthLte.cqi);
-                printf("timingAdvance:%d\n",pos->cellinfo.CellInfo.lte.signalStrengthLte.timingAdvance);
-            }
-            break;
-            case RIL_CELL_INFO_TYPE_WCDMA:
-            {
-                printf("mcc:%d ",pos->cellinfo.CellInfo.wcdma.cellIdentityWcdma.mcc);
-                printf("mnc:%d ",pos->cellinfo.CellInfo.wcdma.cellIdentityWcdma.mnc);
-                printf("lac:%d ",pos->cellinfo.CellInfo.wcdma.cellIdentityWcdma.lac);
-                printf("cid:%d ",pos->cellinfo.CellInfo.wcdma.cellIdentityWcdma.cid);
-                printf("psc:%d ",pos->cellinfo.CellInfo.wcdma.cellIdentityWcdma.psc);
-                printf("signalStrength:%d ",pos->cellinfo.CellInfo.wcdma.signalStrengthWcdma.signalStrength);
-                printf("bitErrorRate:%d\n",pos->cellinfo.CellInfo.wcdma.signalStrengthWcdma.bitErrorRate);
-            }
-            break;
-            case RIL_CELL_INFO_TYPE_TD_SCDMA:
-            {
-                printf("mcc:%d ",pos->cellinfo.CellInfo.tdscdma.cellIdentityTdscdma.mcc);
-                printf("mnc:%d ",pos->cellinfo.CellInfo.tdscdma.cellIdentityTdscdma.mnc);
-                printf("lac:%d ",pos->cellinfo.CellInfo.tdscdma.cellIdentityTdscdma.lac);
-                printf("cid:%d ",pos->cellinfo.CellInfo.tdscdma.cellIdentityTdscdma.cid);
-                printf("cpid:%d ",pos->cellinfo.CellInfo.tdscdma.cellIdentityTdscdma.cpid);
-                printf("rscp:%d\n",pos->cellinfo.CellInfo.tdscdma.signalStrengthTdscdma.rscp);
-            }
-            break;
-            default:
-            {
-                printf("error type");
-            }
-            break;
+    static char *timestamp_type_map[] =
+        {
+            "UNKNOWN",
+            "ANTENNA",
+            "MODEM",
+            "OEM_RIL",
+            "JAVA_RIL"};
+    printf("===============cell info===============\n");
+    while (pos)
+    {
+        printf("cellInfoType:%s\n", cellinfo_type_map[pos->cellinfo.cellInfoType]);
+        printf("registered:%s\n", pos->cellinfo.registered ? "serving cell" : "neighbor cell");
+        printf("timeStampType:%s\n", timestamp_type_map[pos->cellinfo.timeStampType]);
+        printf("timeStamp:%d\n", pos->cellinfo.timeStampType);
+        switch (pos->cellinfo.cellInfoType)
+        {
+        case RIL_CELL_INFO_TYPE_GSM:
+        {
+            printf("mcc:%d ", pos->cellinfo.CellInfo.gsm.cellIdentityGsm.mcc);
+            printf("mnc:%d ", pos->cellinfo.CellInfo.gsm.cellIdentityGsm.mnc);
+            printf("lac:%d ", pos->cellinfo.CellInfo.gsm.cellIdentityGsm.lac);
+            printf("cid:%d ", pos->cellinfo.CellInfo.gsm.cellIdentityGsm.cid);
+            printf("signalStrength:%d ", pos->cellinfo.CellInfo.gsm.signalStrengthGsm.signalStrength);
+            printf("bitErrorRate:%d ", pos->cellinfo.CellInfo.gsm.signalStrengthGsm.bitErrorRate);
+            printf("rscpdbm:%d ", pos->cellinfo.CellInfo.gsm.signalStrengthGsm.rscpdbm);
+            printf("eciodb:%d\n", pos->cellinfo.CellInfo.gsm.signalStrengthGsm.eciodb);
+        }
+        break;
+        case RIL_CELL_INFO_TYPE_CDMA:
+        {
+            printf("networkId:%d ", pos->cellinfo.CellInfo.cdma.cellIdentityCdma.networkId);
+            printf("systemId:%d ", pos->cellinfo.CellInfo.cdma.cellIdentityCdma.systemId);
+            printf("basestationId:%d ", pos->cellinfo.CellInfo.cdma.cellIdentityCdma.basestationId);
+            printf("longitude:%d ", pos->cellinfo.CellInfo.cdma.cellIdentityCdma.longitude);
+            printf("latitude:%d ", pos->cellinfo.CellInfo.cdma.cellIdentityCdma.latitude);
+            printf("Cdma_dbm:%d ", pos->cellinfo.CellInfo.cdma.signalStrengthCdma.dbm);
+            printf("Cdma_ecio:%d ", pos->cellinfo.CellInfo.cdma.signalStrengthCdma.ecio);
+            printf("Evdo_dbm:%d ", pos->cellinfo.CellInfo.cdma.signalStrengthEvdo.dbm);
+            printf("Evdo_ecio:%d ", pos->cellinfo.CellInfo.cdma.signalStrengthEvdo.ecio);
+            printf("Evdo_signalNoiseRatio:%d\n", pos->cellinfo.CellInfo.cdma.signalStrengthEvdo.signalNoiseRatio);
+        }
+        break;
+        case RIL_CELL_INFO_TYPE_LTE:
+        {
+            printf("mcc:%d ", pos->cellinfo.CellInfo.lte.cellIdentityLte.mcc);
+            printf("mnc:%d ", pos->cellinfo.CellInfo.lte.cellIdentityLte.mnc);
+            printf("ci:%d ", pos->cellinfo.CellInfo.lte.cellIdentityLte.ci);
+            printf("pci:%d ", pos->cellinfo.CellInfo.lte.cellIdentityLte.pci);
+            printf("tac:%d ", pos->cellinfo.CellInfo.lte.cellIdentityLte.tac);
+            printf("signalStrength:%d ", pos->cellinfo.CellInfo.lte.signalStrengthLte.signalStrength);
+            printf("rsrp:%d ", pos->cellinfo.CellInfo.lte.signalStrengthLte.rsrp);
+            printf("rsrq:%d ", pos->cellinfo.CellInfo.lte.signalStrengthLte.rsrq);
+            printf("rssnr:%d ", pos->cellinfo.CellInfo.lte.signalStrengthLte.rssnr);
+            printf("cqi:%d ", pos->cellinfo.CellInfo.lte.signalStrengthLte.cqi);
+            printf("timingAdvance:%d\n", pos->cellinfo.CellInfo.lte.signalStrengthLte.timingAdvance);
+        }
+        break;
+        case RIL_CELL_INFO_TYPE_WCDMA:
+        {
+            printf("mcc:%d ", pos->cellinfo.CellInfo.wcdma.cellIdentityWcdma.mcc);
+            printf("mnc:%d ", pos->cellinfo.CellInfo.wcdma.cellIdentityWcdma.mnc);
+            printf("lac:%d ", pos->cellinfo.CellInfo.wcdma.cellIdentityWcdma.lac);
+            printf("cid:%d ", pos->cellinfo.CellInfo.wcdma.cellIdentityWcdma.cid);
+            printf("psc:%d ", pos->cellinfo.CellInfo.wcdma.cellIdentityWcdma.psc);
+            printf("signalStrength:%d ", pos->cellinfo.CellInfo.wcdma.signalStrengthWcdma.signalStrength);
+            printf("bitErrorRate:%d\n", pos->cellinfo.CellInfo.wcdma.signalStrengthWcdma.bitErrorRate);
+        }
+        break;
+        case RIL_CELL_INFO_TYPE_TD_SCDMA:
+        {
+            printf("mcc:%d ", pos->cellinfo.CellInfo.tdscdma.cellIdentityTdscdma.mcc);
+            printf("mnc:%d ", pos->cellinfo.CellInfo.tdscdma.cellIdentityTdscdma.mnc);
+            printf("lac:%d ", pos->cellinfo.CellInfo.tdscdma.cellIdentityTdscdma.lac);
+            printf("cid:%d ", pos->cellinfo.CellInfo.tdscdma.cellIdentityTdscdma.cid);
+            printf("cpid:%d ", pos->cellinfo.CellInfo.tdscdma.cellIdentityTdscdma.cpid);
+            printf("rscp:%d\n", pos->cellinfo.CellInfo.tdscdma.signalStrengthTdscdma.rscp);
+        }
+        break;
+        default:
+        {
+            printf("error type");
+        }
+        break;
         }
         printf("====================\n");
         pos = pos->next;
@@ -2110,7 +2082,7 @@ static void simcom_nas_test()
         {
             continue;
         }
-        
+
         /* Convert the option to an integer, and switch on the option entered. */
         opt = atoi(scan_string);
         switch (opt)
@@ -2139,7 +2111,7 @@ static void simcom_nas_test()
         case 3:
         {
             ret = get_NetworkPreferredMode(&nw_mode);
-            printf("nw mode:%d\n",nw_mode);
+            printf("nw mode:%d\n", nw_mode);
         }
         break;
         case 4:
@@ -2152,11 +2124,11 @@ static void simcom_nas_test()
             }
             nw_mode = atoi(scan_string);
             ret = set_NetworkPreferredMode(nw_mode);
-            if(ret != 0)
+            if (ret != 0)
             {
                 printf("error!");
             }
-        }   
+        }
         break;
         case 6:
         {
@@ -2164,21 +2136,21 @@ static void simcom_nas_test()
             ret = get_ExtSignalInfo(&siginfo);
             if (siginfo.lte_siginfo.SigType == 1)
             {
-                printf("LTE info:%d,%d,%d,%d", siginfo.lte_siginfo.rssi,siginfo.lte_siginfo.rsrp,siginfo.lte_siginfo.rsrq,siginfo.lte_siginfo.sinr);
+                printf("LTE info:%d,%d,%d,%d", siginfo.lte_siginfo.rssi, siginfo.lte_siginfo.rsrp, siginfo.lte_siginfo.rsrq, siginfo.lte_siginfo.sinr);
             }
 
             if (siginfo.gsm_siginfo.SigType == 0)
             {
-                printf("GSM info:%d,%d,%d", siginfo.gsm_siginfo.rssi,siginfo.gsm_siginfo.rscp,siginfo.gsm_siginfo.ecio);
+                printf("GSM info:%d,%d,%d", siginfo.gsm_siginfo.rssi, siginfo.gsm_siginfo.rscp, siginfo.gsm_siginfo.ecio);
             }
         }
         break;
         case 7:
         {
             ret = get_PhoneMode(&mode);
-            if(ret == 0)
+            if (ret == 0)
             {
-                app_nas_printf_phonemode(mode);            
+                app_nas_printf_phonemode(mode);
             }
             else
             {
@@ -2197,7 +2169,7 @@ static void simcom_nas_test()
             }
             mode = atoi(scan_string);
             ret = set_PhoneMode(mode);
-            if(ret != 0)
+            if (ret != 0)
             {
                 printf("error!");
             }
@@ -2206,7 +2178,7 @@ static void simcom_nas_test()
         case 9:
         {
             ret = get_CellInfo(&head);
-            if(!ret)
+            if (!ret)
             {
                 app_nas_printf_cell_info(head);
             }
@@ -2219,7 +2191,7 @@ static void simcom_nas_test()
         {
             int ims_registration_state;
             ret = get_ImsRegistrationState(&ims_registration_state);
-            if(ret == EXIT_SUCCESS)
+            if (ret == EXIT_SUCCESS)
             {
                 printf("ims registration state=%d\n", ims_registration_state);
             }
@@ -2235,7 +2207,7 @@ static void simcom_nas_test()
             char long_formal_alphanumeric[MAX_SIM_INFO_STR_LEN];
             char short_formal_alphanumeric[MAX_SIM_INFO_STR_LEN];
             char numeric[MAX_SIM_INFO_STR_LEN];
-            ret = get_register_plmn( long_formal_alphanumeric, short_formal_alphanumeric, numeric);
+            ret = get_register_plmn(long_formal_alphanumeric, short_formal_alphanumeric, numeric);
             if (ret != 0)
             {
                 printf("error!\n");
@@ -2246,20 +2218,20 @@ static void simcom_nas_test()
             }
         }
         break;
-        
+
         case 12:
         {
-            Network_list *tmp =NULL;
-            Network_list *network_tmp =NULL;
-            Network_list *network_head =NULL;
+            Network_list *tmp = NULL;
+            Network_list *network_tmp = NULL;
+            Network_list *network_head = NULL;
             ret = search_network(&network_head);
-            if(network_head == NULL)
+            if (network_head == NULL)
             {
                 printf("Failed to receive data!\n");
             }
             if (ret == 0)
             {
-                if(network_head == NULL)
+                if (network_head == NULL)
                 {
                     printf("Failed to receive data!\n");
                 }
@@ -2272,7 +2244,7 @@ static void simcom_nas_test()
                         {
                             printf("id:%d\n", tmp->id);
                             printf("isp_name:%s\n", tmp->isp_name);
-                            printf("plmn:%s\n", tmp->plmn); 
+                            printf("plmn:%s\n", tmp->plmn);
                             printf("status:%s\n", tmp->status);
                             printf("act:%s\n\n", tmp->act);
                             tmp = tmp->next;
@@ -2307,7 +2279,7 @@ static void simcom_nas_test()
 
         case 13:
         {
-            char plmn[MAX_NETWORK_INFO_STR_LEN]={0};
+            char plmn[MAX_NETWORK_INFO_STR_LEN] = {0};
             int act = -1;
             int i = 0;
             while (1)
@@ -2365,7 +2337,7 @@ static void simcom_nas_test()
             }
         }
         break;
-        
+
         default:
             break;
         }
@@ -2389,7 +2361,7 @@ static boolean select_ap_index(ap_index_type *ap_index)
         printf("Please input the ap_index: ");
         fgets(ap_index_str, sizeof(ap_index_str), stdin);
 
-        //ap_index_val == atoi(ap_index_str);
+        // ap_index_val == atoi(ap_index_str);
         if (strlen(ap_index_str) != 2)
         {
             return FALSE;
@@ -2642,7 +2614,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 memcpy(ssid, scan_string, strlen(scan_string) - 1);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -2656,7 +2628,7 @@ static void simcom_wifi_test()
                     continue;
                 memcpy(ssid, scan_string, strlen(scan_string) - 1);
                 char ssid_cmp[65] = {0};
-                if (strcmp(ssid,ssid_cmp) == 0)
+                if (strcmp(ssid, ssid_cmp) == 0)
                 {
                     printf("\nset SSID failed!\n");
                     break;
@@ -2689,7 +2661,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 freq = atoi(scan_string);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -2729,7 +2701,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 freq = atoi(scan_string);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -2773,7 +2745,7 @@ static void simcom_wifi_test()
 
                 encrypt_mode = atoi(str_encrypt_mode);
 
-                //check  encrypt_mode value
+                // check  encrypt_mode value
                 if (auth_type == AUTH_WPA) // wpa
                 {
                     if ((encrypt_mode < E_TKIP) || (encrypt_mode > E_AES_TKIP))
@@ -2818,7 +2790,7 @@ static void simcom_wifi_test()
                 }
             }
 
-            ret = set_auth_plus(pwd_str, auth_type, encrypt_mode, ap_index,freq);
+            ret = set_auth_plus(pwd_str, auth_type, encrypt_mode, ap_index, freq);
             if (ret)
             {
                 printf("\nset AUTH success!\n");
@@ -2846,7 +2818,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 freq = atoi(scan_string);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -2856,7 +2828,7 @@ static void simcom_wifi_test()
                 }
                 freq = FREQ_2_4G;
             }
-            ret = get_auth_plus(&auth_type, &encrypt_mode, pwd_str, ap_index,freq);
+            ret = get_auth_plus(&auth_type, &encrypt_mode, pwd_str, ap_index, freq);
             if (ret)
             {
                 printf("\nAUTH: %d,%d,\"%s\"\n", auth_type, encrypt_mode, pwd_str);
@@ -2881,7 +2853,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 freq = atoi(scan_string);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -2899,7 +2871,7 @@ static void simcom_wifi_test()
 
             broadcast = atoi(scan_string);
 
-            ret = set_bcast_plus(broadcast, ap_index,freq);
+            ret = set_bcast_plus(broadcast, ap_index, freq);
             if (ret)
             {
                 printf("\nset set_bcast success!\n");
@@ -2924,7 +2896,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 freq = atoi(scan_string);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -2935,7 +2907,7 @@ static void simcom_wifi_test()
                 freq = FREQ_2_4G;
             }
 
-            ret = get_bcast_plus(&broadcast, ap_index,freq);
+            ret = get_bcast_plus(&broadcast, ap_index, freq);
             if (ret)
             {
                 printf("\nbroadcast: %d\n", broadcast);
@@ -3018,7 +2990,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 freq = atoi(scan_string);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -3036,7 +3008,7 @@ static void simcom_wifi_test()
 
             isolate = atoi(scan_string);
 
-            ret = set_isolate_plus(isolate, ap_index,freq);
+            ret = set_isolate_plus(isolate, ap_index, freq);
             if (ret)
             {
                 printf("\nset set_isolate success!\n");
@@ -3060,7 +3032,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 freq = atoi(scan_string);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -3071,7 +3043,7 @@ static void simcom_wifi_test()
                 freq = FREQ_2_4G;
             }
 
-            ret = get_isolate_plus(&isolate, ap_index,freq);
+            ret = get_isolate_plus(&isolate, ap_index, freq);
             if (ret)
             {
                 printf("\nisolate: %d\n", isolate);
@@ -3371,9 +3343,9 @@ static void simcom_wifi_test()
                 break;
             }
 
-            //ssid[0] = '\"';
+            // ssid[0] = '\"';
             strncpy(ssid, scan_string, strlen(scan_string) - 1);
-            //ssid[strlen(ssid)] = '\"';
+            // ssid[strlen(ssid)] = '\"';
             printf("\n ssid[%s]\n", ssid);
 
             printf("   Please input the password of external wireless network(8-64): ");
@@ -3404,10 +3376,10 @@ static void simcom_wifi_test()
                 break;
             }
 
-            //psk_value[0] = '\"';
+            // psk_value[0] = '\"';
             strncpy(psk_value, scan_string, strlen(scan_string) - 1);
-            //psk_value[strlen(psk_value)] = '\"';
-            //printf("\n psk_value[%s]\n", psk_value);
+            // psk_value[strlen(psk_value)] = '\"';
+            // printf("\n psk_value[%s]\n", psk_value);
 
             ret = set_sta_cfg(ssid, psk_value);
             if (ret)
@@ -3490,7 +3462,7 @@ static void simcom_wifi_test()
                 memset(scan_string, 0, sizeof(scan_string));
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
-                //ap_index == atoi(scan_string);
+                // ap_index == atoi(scan_string);
                 if (strlen(scan_string) != 2)
                 {
                     break;
@@ -3701,7 +3673,7 @@ static void simcom_wifi_test()
             {
                 act = 1;
             }
-            //act = atoi(scan_string);
+            // act = atoi(scan_string);
             printf("\nact=[%d]\n", act);
             if (act < 0 || act > 1)
             {
@@ -3775,7 +3747,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 freq = atoi(scan_string);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -3790,7 +3762,7 @@ static void simcom_wifi_test()
             {
                 printf("Please input the channel(0~14) (12~14 Associated with the country code): ");
             }
-            else if(freq == FREQ_5G)
+            else if (freq == FREQ_5G)
             {
                 printf("Please input the channel(36 40 44 48 52 56 60 64 149 153 157 161) : ");
             }
@@ -3799,7 +3771,7 @@ static void simcom_wifi_test()
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
             channel = atoi(scan_string);
-            ret = set_channel_plus(channel, ap_index,freq);
+            ret = set_channel_plus(channel, ap_index, freq);
             if (ret)
             {
                 printf("\nset set_channel success!\n");
@@ -3813,7 +3785,7 @@ static void simcom_wifi_test()
 
         case 31:
         {
-            int  channel=0;
+            int channel = 0;
             ap_index_type ap_index;
             wifi_freq freq;
 
@@ -3824,7 +3796,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 freq = atoi(scan_string);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -3835,7 +3807,7 @@ static void simcom_wifi_test()
                 freq = FREQ_2_4G;
             }
 
-            ret = get_channel_plus(&channel,ap_index,freq);
+            ret = get_channel_plus(&channel, ap_index, freq);
             if (ret)
             {
                 printf("\n channel: %d\n", channel);
@@ -3860,7 +3832,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 freq = atoi(scan_string);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -3875,19 +3847,18 @@ static void simcom_wifi_test()
             {
                 printf(" Please input the netmode(E_11B---1  E_11G---2  E_11BG---3  E_11N---4): ");
             }
-            else if(freq == FREQ_5G)
+            else if (freq == FREQ_5G)
             {
-                //E_11AC-- 7 not supported now
+                // E_11AC-- 7 not supported now
                 printf(" The E_11AC---7 mode is not supported !\n");
                 printf(" Please input the netmode(E_11A---5  E_11NA---6 ): ");
-
             }
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
             netmode = atoi(scan_string);
 
-            ret = set_netmode_plus(netmode, ap_index,freq);
+            ret = set_netmode_plus(netmode, ap_index, freq);
             if (ret)
             {
                 printf("\nset set_netmode success!\n");
@@ -3901,7 +3872,7 @@ static void simcom_wifi_test()
 
         case 33:
         {
-            int  netmode=0;
+            int netmode = 0;
             ap_index_type ap_index;
             wifi_freq freq;
 
@@ -3912,7 +3883,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 freq = atoi(scan_string);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -3923,7 +3894,7 @@ static void simcom_wifi_test()
                 freq = FREQ_2_4G;
             }
 
-            ret = get_netmode_plus(&netmode,ap_index,freq);
+            ret = get_netmode_plus(&netmode, ap_index, freq);
             if (ret)
             {
                 printf("\n netmode: %d\n", netmode);
@@ -3937,10 +3908,10 @@ static void simcom_wifi_test()
 
         case 34:
         {
-            int band ;
+            int band;
             ap_index_type ap_index;
             wifi_freq freq;
-            int  netmode=0;
+            int netmode = 0;
             if (simcom_if_support_5G() == 1)
             {
                 printf(" Please input the freq 0~2.4G  1~5G: ");
@@ -3948,7 +3919,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 freq = atoi(scan_string);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -3959,8 +3930,8 @@ static void simcom_wifi_test()
                 freq = FREQ_2_4G;
             }
 
-            ret = get_netmode_plus(&netmode,ap_index,freq);
-            if(netmode != E_11N && netmode != E_11NA)
+            ret = get_netmode_plus(&netmode, ap_index, freq);
+            if (netmode != E_11N && netmode != E_11NA)
             {
                 printf("Set Band fail!\n Maybe you should set netmode to E_11N or E_11NA\n");
                 break;
@@ -3979,7 +3950,7 @@ static void simcom_wifi_test()
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
             band = atoi(scan_string);
-            ret = set_band_plus(band, ap_index,freq);
+            ret = set_band_plus(band, ap_index, freq);
             if (ret)
             {
                 printf("\nset set_band success!\n");
@@ -3993,7 +3964,7 @@ static void simcom_wifi_test()
 
         case 35:
         {
-            int  band=0;
+            int band = 0;
             ap_index_type ap_index;
             wifi_freq freq;
 
@@ -4004,7 +3975,7 @@ static void simcom_wifi_test()
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                     continue;
                 freq = atoi(scan_string);
-                ap_index  = AP_INDEX_0;
+                ap_index = AP_INDEX_0;
             }
             else
             {
@@ -4015,7 +3986,7 @@ static void simcom_wifi_test()
                 freq = FREQ_2_4G;
             }
 
-            ret = get_band_plus(&band,ap_index,freq);
+            ret = get_band_plus(&band, ap_index, freq);
             if (ret)
             {
                 printf("\n get_band: %d\n", band);
@@ -4028,9 +3999,9 @@ static void simcom_wifi_test()
         break;
 
         case 36:
-        {    
+        {
             client_info_node_ptr head;
-            ret= get_clients_info(GET_ALL_CLIENTS_STAT,&head);
+            ret = get_clients_info(GET_ALL_CLIENTS_STAT, &head);
             client_info_list_display(head);
             client_info_list_destroy(head);
         }
@@ -4039,7 +4010,7 @@ static void simcom_wifi_test()
         case 37:
         {
             client_info_node_ptr head;
-            ret= get_clients_info(GET_CONN_CLIENTS,&head);
+            ret = get_clients_info(GET_CONN_CLIENTS, &head);
             client_info_list_display(head);
             client_info_list_destroy(head);
         }
@@ -4053,7 +4024,7 @@ static void simcom_wifi_test()
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
             num = atoi(scan_string);
-            ret =   wifi_connect_num_config(num);
+            ret = wifi_connect_num_config(num);
             if (ret)
             {
                 printf("\nThe number of wifi connections is configured successfully!\n");
@@ -4073,7 +4044,7 @@ static void simcom_wifi_test()
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
             opt = atoi(scan_string);
-            ret =   enable_wps_pushbutton(opt);
+            ret = enable_wps_pushbutton(opt);
             if (ret)
             {
                 printf("\nenable wps success!\n");
@@ -4087,7 +4058,7 @@ static void simcom_wifi_test()
 
         case 40:
         {
-            int  state=0;
+            int state = 0;
             ret = get_wps_pushbutton_state(&state);
             if (ret)
             {
@@ -4120,7 +4091,7 @@ static void simcom_wifi_test()
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
-            //check input param
+            // check input param
             ret = wifi_call_wps_pin(scan_string);
             if (ret)
             {
@@ -4156,9 +4127,9 @@ static void simcom_wifi_test()
             printf("please input>");
             memset(filter, 0, sizeof(filter));
             if (fgets(filter, sizeof(filter), stdin) == NULL)
-            continue;
+                continue;
             filter[strlen(filter) - 1] = 0;
-            ret= wifi_set_mac_filter_mode(filter);
+            ret = wifi_set_mac_filter_mode(filter);
             if (ret == -1)
             {
                 printf("Set up the faild!\n");
@@ -4167,12 +4138,12 @@ static void simcom_wifi_test()
             {
                 printf("Set up the success!\n");
             }
-         }
+        }
         break;
 
         case 45:
         {
-            int ret= 0;
+            int ret = 0;
             maclist_info_t mac_info;
             ret = wifi_get_mac_filter_info(&mac_info);
             if (ret == -1)
@@ -4181,16 +4152,16 @@ static void simcom_wifi_test()
             }
             else
             {
-                printf("mac mode is %s\n",mac_info.filtermode);
+                printf("mac mode is %s\n", mac_info.filtermode);
                 if (mac_info.allow_flag == 0)
                 {
                     printf("allowlist = NULL\n");
                 }
                 else
                 {
-                    for(i=0;i<mac_info.allownum;i++)
+                    for (i = 0; i < mac_info.allownum; i++)
                     {
-                        printf("allowlist = %s\n",mac_info.allowlist[i]);
+                        printf("allowlist = %s\n", mac_info.allowlist[i]);
                         free(mac_info.allowlist[i]);
                     }
                     free(mac_info.allowlist);
@@ -4201,9 +4172,9 @@ static void simcom_wifi_test()
                 }
                 else
                 {
-                    for(i=0;i<mac_info.denynum;i++)
+                    for (i = 0; i < mac_info.denynum; i++)
                     {
-                        printf("denylist = %s\n",mac_info.denylist[i]);
+                        printf("denylist = %s\n", mac_info.denylist[i]);
                         free(mac_info.denylist[i]);
                     }
                     free(mac_info.denylist);
@@ -4215,14 +4186,14 @@ static void simcom_wifi_test()
         case 46:
         {
             char scan_string[1024] = {0};
-            char filter[256] = {0};                      //A maximum of 14 MAC addresses can be entered
+            char filter[256] = {0}; // A maximum of 14 MAC addresses can be entered
             int ret = 0;
             printf("please add allow mac address filter\n");
             printf("For example:XX:XX:XX:XX:XX:XX\n");
             printf("please input>");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-            continue;
+                continue;
 
             if (strlen(scan_string) > 256)
             {
@@ -4241,7 +4212,7 @@ static void simcom_wifi_test()
                 {
                     printf("ADD allow mac address Success!\n");
                 }
-             }
+            }
         }
         break;
 
@@ -4255,7 +4226,7 @@ static void simcom_wifi_test()
             printf("please input>");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-            continue;
+                continue;
             if (strlen(scan_string) > 256)
             {
                 printf("Enter more than 14 MAC addresses,Input error!\n");
@@ -4287,7 +4258,7 @@ static void simcom_wifi_test()
             printf("please input>");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-            continue;
+                continue;
             if (strlen(scan_string) > 256)
             {
                 printf("Enter more than 14 MAC addresses,Input error!\n");
@@ -4320,7 +4291,7 @@ static void simcom_wifi_test()
             printf("please input>");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-            continue;
+                continue;
             if (strlen(scan_string) > 256)
             {
                 printf("Enter more than 14 MAC addresses,Input error!\n");
@@ -4376,40 +4347,39 @@ static void simcom_wifi_test()
         case 51:
         {
             int ret_value = -1;
-            ret_value =  get_wifi_mode();
-            printf("\n ret_value %d \n",ret_value);
+            ret_value = get_wifi_mode();
+            printf("\n ret_value %d \n", ret_value);
             if (ret_value == AP_MODE)
             {
                 printf("\n The current mode is single AP ! \n");
             }
-            else if(ret_value == STA_MODE)
+            else if (ret_value == STA_MODE)
             {
                 printf("\n The current mode is single-station mode ! \n");
             }
-            else if(ret_value == APAP_MODE)
+            else if (ret_value == APAP_MODE)
             {
                 printf("\n The current mode is APAP_MODE ! \n");
             }
-            else if(ret_value == APSTA_MODE)
+            else if (ret_value == APSTA_MODE)
             {
                 printf("\n The current mode is APSTA_MODE ! \n");
             }
-            else if(ret_value == UNKNOW_MODE)
+            else if (ret_value == UNKNOW_MODE)
             {
                 printf("\n Current mode unknown! \n");
             }
             else
             {
-                 printf("\n get_wifi_mode failed! \n");
+                printf("\n get_wifi_mode failed! \n");
             }
         }
         break;
 
-        
         case 52:
         {
             sta_scan_info_node_ptr head;
-            int scan_ret=sta_scan(&head);
+            int scan_ret = sta_scan(&head);
             if (scan_ret != -1)
             {
                 sta_scan_info_list_display(head);
@@ -4421,34 +4391,34 @@ static void simcom_wifi_test()
             }
         }
         break;
-        
+
         case 53:
         {
             char in_ssid[32] = {0};
             char in_psk[64] = {0};
             int ret = 0;
-            int lenth=0;
+            int lenth = 0;
             printf("please input ssid:\n");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
-                 continue;
+                continue;
             }
             lenth = strlen(scan_string);
-            scan_string[lenth-1] = '\0';
-            strncpy(in_ssid,scan_string,32);
+            scan_string[lenth - 1] = '\0';
+            strncpy(in_ssid, scan_string, 32);
             printf("please input password:\n");
-            
+
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
-                 continue;
+                continue;
             }
             lenth = strlen(scan_string);
-            scan_string[lenth-1] = '\0';
-            strncpy(in_psk,scan_string,64);
+            scan_string[lenth - 1] = '\0';
+            strncpy(in_psk, scan_string, 64);
 
-            ret = sta_connect(in_ssid,in_psk);
+            ret = sta_connect(in_ssid, in_psk);
             if (ret == -1)
             {
                 printf("sta_connect fail! \n");
@@ -4468,7 +4438,7 @@ static void simcom_wifi_test()
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
-                 continue;
+                continue;
             }
             mode = atoi(scan_string);
 
@@ -4483,7 +4453,6 @@ static void simcom_wifi_test()
             }
         }
         break;
-
 
         case 55:
         {
@@ -4520,10 +4489,10 @@ static void simcom_wifi_test()
             boolean ret = false;
             char ssid_str[32] = {0};
             char psk_value[64] = {0};
-            ret = get_sta_cfg(ssid_str,psk_value);
+            ret = get_sta_cfg(ssid_str, psk_value);
             if (ret)
             {
-                printf("\nssid_str: %s\npsk_value: %s\n",ssid_str,psk_value);
+                printf("\nssid_str: %s\npsk_value: %s\n", ssid_str, psk_value);
             }
             else
             {
@@ -4539,7 +4508,7 @@ static void simcom_wifi_test()
             ret = get_sta_ip(ip_str);
             if (ret)
             {
-                printf("ip_str: %s\n",ip_str);
+                printf("ip_str: %s\n", ip_str);
             }
             else
             {
@@ -4547,7 +4516,6 @@ static void simcom_wifi_test()
             }
         }
         break;
-
 
         case 58:
         {
@@ -4563,7 +4531,7 @@ static void simcom_wifi_test()
             }
         }
         break;
-        
+
         case 59:
         {
             boolean ret = false;
@@ -4576,7 +4544,6 @@ static void simcom_wifi_test()
             {
                 printf("\n sta_enable_network failed!\n");
             }
-
         }
         break;
 
@@ -4588,17 +4555,17 @@ static void simcom_wifi_test()
 
             if (simcom_if_support_5G() == 1)
             {
-                 ap_index = AP_INDEX_0;
-                 printf("   Please input the freq  0~FREQ_2_4G 1~FREQ_5G : ");
-                 memset(scan_string, 0, sizeof(scan_string));
-                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                     continue;
-                 freq = atoi(scan_string);
-                 printf("   Please input the act  0~disable wifi  1~enable wifi : ");
-                 memset(scan_string, 0, sizeof(scan_string));
-                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                     continue;
-                 act = atoi(scan_string);
+                ap_index = AP_INDEX_0;
+                printf("   Please input the freq  0~FREQ_2_4G 1~FREQ_5G : ");
+                memset(scan_string, 0, sizeof(scan_string));
+                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                    continue;
+                freq = atoi(scan_string);
+                printf("   Please input the act  0~disable wifi  1~enable wifi : ");
+                memset(scan_string, 0, sizeof(scan_string));
+                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                    continue;
+                act = atoi(scan_string);
                 // change wifi freq  2.4  ~ 5g
             }
             else
@@ -4606,10 +4573,10 @@ static void simcom_wifi_test()
                 printf("   Please input the act  0~disable wifi  1~enable wifi : ");
                 memset(scan_string, 0, sizeof(scan_string));
                 if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                continue;
+                    continue;
                 act = atoi(scan_string);
-           }
-            ret = wifi_change_freq(ap_index,freq,act);
+            }
+            ret = wifi_change_freq(ap_index, freq, act);
             if (ret)
             {
                 printf("\n set success\n");
@@ -4647,15 +4614,15 @@ static char CHAR_TO_OCTET(char ch)
 {
     char rc;
 
-    if (ch >= '0' && ch <= '9') //0-9
+    if (ch >= '0' && ch <= '9') // 0-9
     {
         rc = ch - '0';
     }
-    else if (ch >= 'A' && ch <= 'F') //A-F
+    else if (ch >= 'A' && ch <= 'F') // A-F
     {
         rc = ch - 'A' + 10;
     }
-    else if (ch >= 'a' && ch <= 'f') //a-f
+    else if (ch >= 'a' && ch <= 'f') // a-f
     {
         rc = ch - 'a' + 10;
     }
@@ -4711,7 +4678,7 @@ static void simcom_sms_test()
     int i, j;
     char scan_string[500] = {0};
 
-    if(sms_init((sms_ind_cb_fcn)process_simcom_ind_message) != 0)
+    if (sms_init((sms_ind_cb_fcn)process_simcom_ind_message) != 0)
     {
         return;
     }
@@ -4731,7 +4698,7 @@ static void simcom_sms_test()
         opt = atoi(scan_string);
         switch (opt)
         {
-        case 1: //ASCII
+        case 1: // ASCII
         {
             char phone_num[25] = {0};
             while (1)
@@ -4811,9 +4778,9 @@ static void simcom_sms_test()
         break;
         case 3:
         {
-             //char *pdu = "099164000339044202F0240BA13100382098F800001211011161632304F4F29C0E";
+            // char *pdu = "099164000339044202F0240BA13100382098F800001211011161632304F4F29C0E";
             char *pdu = "099164000339044202F0640BA13100382098F8000812111101348423340500030F02027CFB597D50CF6D696D6983618361597D597D7684776189C94E0D95194E0D95195C31662F5C315B9E8BDD5B9E8BF4";
-            sms_message_gsm * sms_message = NULL;
+            sms_message_gsm *sms_message = NULL;
 
             sms_message = create_from_pdu(pdu);
             if (sms_message != NULL)
@@ -4833,12 +4800,12 @@ static void simcom_sms_test()
                 }
                 free(sms_message);
             }
-            else 
+            else
             {
                 printf("create from pdu failed\n");
             }
         }
-            break;
+        break;
         case 4:
         {
             char smsc_addr[SMS_SMSC_ADDRESS_LENGTH] = {0};
@@ -4917,7 +4884,7 @@ static void simcom_ota_test()
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
-        
+
             memset(url, 0, sizeof(url));
             if (strlen(scan_string) > 0 && strlen(scan_string) < 64)
             {
@@ -4932,7 +4899,7 @@ static void simcom_ota_test()
             {
                 printf("\nUpgrade successfully");
             }
-            else if(ret == -1)
+            else if (ret == -1)
             {
                 printf("\nUpgrade faild");
             }
@@ -4951,7 +4918,7 @@ static void simcom_ota_test()
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
-            
+
             memset(url, 0, sizeof(url));
             strncpy(url, scan_string, strlen(scan_string) - 1);
             ret = upgrade_through_http(url);
@@ -4973,7 +4940,7 @@ static void simcom_ota_test()
             ret = query_update_state(&state);
             if (ret = 1)
             {
-                printf("%d",state);
+                printf("%d", state);
             }
         }
         break;
@@ -4996,8 +4963,7 @@ static void simcom_adc_test()
         {
             "1. ADC value(voltage)",
             "2. VBAT value(voltage)",
-            "99. Back"
-        };
+            "99. Back"};
 
     int opt = 0;
     int i, j;
@@ -5063,8 +5029,7 @@ static void simcom_i2c_test()
         {
             "0. write slave device",
             "1. read from slave device",
-            "99. Back"
-        };
+            "99. Back"};
 
     int opt = 0;
     int i, j;
@@ -5096,7 +5061,7 @@ static void simcom_i2c_test()
             uint8_t *buf;
             int len;
 
-            printf("\nPlease input slave addr format 0x36>"); //input the addr
+            printf("\nPlease input slave addr format 0x36>"); // input the addr
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -5105,7 +5070,7 @@ static void simcom_i2c_test()
 
             sscanf(scan_string, "%x", &slave_addr);
             printf("slave_addr = 0x%x\n", slave_addr);
-            printf("\nPlease input slave device register format 0x64>"); //input the addr
+            printf("\nPlease input slave device register format 0x64>"); // input the addr
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -5114,7 +5079,7 @@ static void simcom_i2c_test()
 
             sscanf(scan_string, "%x", &reg);
             printf("reg = 0x%x\n", reg);
-            printf("\nPlease input value format 0x3000>"); //input the addr
+            printf("\nPlease input value format 0x3000>"); // input the addr
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL || strlen(scan_string) < 3)
             {
@@ -5127,7 +5092,7 @@ static void simcom_i2c_test()
             {
                 printf("buf[%d]=0x%x\n", i, buf[i]);
             }
-            printf("\nPlease input write len 2>"); //input the addr
+            printf("\nPlease input write len 2>"); // input the addr
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -5149,7 +5114,7 @@ static void simcom_i2c_test()
             uint16_t reg;
             uint8_t *buf;
             int len;
-            printf("\nPlease input slave addr format 0x36>"); //input the addr
+            printf("\nPlease input slave addr format 0x36>"); // input the addr
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -5158,7 +5123,7 @@ static void simcom_i2c_test()
 
             sscanf(scan_string, "%x", &slave_addr);
             printf("slave_addr = 0x%x\n", slave_addr);
-            printf("\nPlease input slave device register format 0x64>"); //input the addr
+            printf("\nPlease input slave device register format 0x64>"); // input the addr
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -5167,7 +5132,7 @@ static void simcom_i2c_test()
 
             sscanf(scan_string, "%x", &reg);
             printf("reg = 0x%x\n", reg);
-            printf("\nPlease input read len 2>"); //input the addr
+            printf("\nPlease input read len 2>"); // input the addr
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -5312,7 +5277,7 @@ static void simcom_at_test()
             {
                 continue;
             }
-            if(input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
+            if (input_digitalized_check(scan_string, strlen(scan_string) - 1) == -1)
             {
                 printf("error input");
                 continue;
@@ -5342,17 +5307,17 @@ static void simcom_at_test()
         {
             struct simcom_search_net_info *net_info_list = NULL;
             struct simcom_search_net_info *tmp = NULL;
-            
+
             printf("\nManual searching network,Please wait...\n");
             ret = manual_search_network(&net_info_list);
             if (ret == 0)
             {
                 printf("manual search network successfully\n");
-                while(net_info_list != NULL)
+                while (net_info_list != NULL)
                 {
                     tmp = net_info_list;
-                    printf("MCC=%d,MNC=%d,RSSI=%d,NET_TYPE=%d\n", tmp->mcc, tmp->mnc, tmp->rssi, tmp->net);                    
-                    if(tmp->next != NULL)
+                    printf("MCC=%d,MNC=%d,RSSI=%d,NET_TYPE=%d\n", tmp->mcc, tmp->mnc, tmp->rssi, tmp->net);
+                    if (tmp->next != NULL)
                     {
                         net_info_list = tmp->next;
                     }
@@ -5432,7 +5397,7 @@ static void simcom_at_test()
             ret = get_current_band(&GSM_band, &UMTS_band, &LTEH_band, &LTEL_band);
             if (ret == 0)
             {
-                printf("GSM:%d,UMTS:%d,LTEH:%d,LTEL:%d\n",GSM_band,UMTS_band,LTEH_band,LTEL_band);
+                printf("GSM:%d,UMTS:%d,LTEH:%d,LTEL:%d\n", GSM_band, UMTS_band, LTEH_band, LTEL_band);
             }
             else
             {
@@ -5507,7 +5472,7 @@ static void simcom_at_test()
             ret = get_frequency_cell_lock_info(&mode, &act, &freq, &cellid);
             if (ret == 0)
             {
-                printf("mode:%d, act:%d, freq:%d, cellid:%d\n",mode, act, freq, cellid);
+                printf("mode:%d, act:%d, freq:%d, cellid:%d\n", mode, act, freq, cellid);
             }
             else
             {
@@ -5598,9 +5563,9 @@ static void simcom_at_test()
             }
         }
         break;
-        
+
         case 18:
-        {   
+        {
             int act;
             printf("\nPlease set value (0:close CTZU 1:open CTZU) >");
             memset(scan_string, 0, sizeof(scan_string));
@@ -5609,7 +5574,7 @@ static void simcom_at_test()
                 continue;
             }
             act = atoi(scan_string);
-            ret =set_gain_NITZtime_enable(act);
+            ret = set_gain_NITZtime_enable(act);
             if (ret == 0)
             {
                 printf("success\n");
@@ -5626,10 +5591,10 @@ static void simcom_at_test()
         {
             int onoff;
             memset(buff, 0, sizeof(buff));
-            ret =query_gain_NITZtime_enable(buff,sizeof(buff));
+            ret = query_gain_NITZtime_enable(buff, sizeof(buff));
             if (ret == 0)
             {
-                printf("CTZU:%s\n",buff);
+                printf("CTZU:%s\n", buff);
             }
             else
             {
@@ -5646,10 +5611,10 @@ static void simcom_at_test()
             ret = query_registe_network_information(&info);
             if (ret == 0)
             {
-                //printf("success\n");
+                // printf("success\n");
                 printf("======================================\n");
                 printf("act:%d,mcc:%d,mnc:%d,area_code:%x,cellid:%d,band:%d,earfcn:%d\n",
-                info.access_tech, info.mcc, info.mnc, info.area_code, info.cell_id, info.freq_band, info.earfcn);
+                       info.access_tech, info.mcc, info.mnc, info.area_code, info.cell_id, info.freq_band, info.earfcn);
                 printf("======================================\n");
             }
             else
@@ -5667,7 +5632,7 @@ static void simcom_at_test()
             ret = query_SIM_number(number);
             if (ret == 0)
             {
-                //printf("success\n");
+                // printf("success\n");
                 printf("======================================\n");
                 printf("number:%s\n", number);
                 printf("======================================\n");
@@ -5758,91 +5723,90 @@ static void simcom_gpio_test()
             modem_ri_notify_mcu();
             break;
         case 4:
+        {
+            int gpio;
+            int ret;
+            memset(scan_string, 0, sizeof(scan_string));
+            printf("\nPlease input which gpio you want to get :"); // input the addr
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
-                int gpio;
-                int ret;
-                memset(scan_string, 0, sizeof(scan_string));
-                printf("\nPlease input which gpio you want to get :"); //input the addr
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                {
-                    continue;
-                }
-                gpio = atoi(scan_string);
-                ret = gpio_get_dir(gpio);
-                if (ret == 0)
-                {
-                    printf("The direction of gpio%d is in!\n", gpio);
-                }
-                else if (ret == 1)
-                {
-                    printf("The direction of gpio%d is out!\n", gpio);
-                }
-                else
-                {
-                    printf ("Get the direction of gpio%d failed!\n", gpio);
-                }
+                continue;
             }
-            break;
+            gpio = atoi(scan_string);
+            ret = gpio_get_dir(gpio);
+            if (ret == 0)
+            {
+                printf("The direction of gpio%d is in!\n", gpio);
+            }
+            else if (ret == 1)
+            {
+                printf("The direction of gpio%d is out!\n", gpio);
+            }
+            else
+            {
+                printf("Get the direction of gpio%d failed!\n", gpio);
+            }
+        }
+        break;
         case 5:
+        {
+            int gpio;
+            int ret;
+            memset(scan_string, 0, sizeof(scan_string));
+            printf("\nPlease input which gpio you want to get :"); // input the addr
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
-                int gpio;
-                int ret;
-                memset(scan_string, 0, sizeof(scan_string));
-                printf("\nPlease input which gpio you want to get :"); //input the addr
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                {
-                    continue;
-                }
-                gpio = atoi(scan_string);
-                ret = gpio_get_value(gpio);
-                if (ret == 0)
-                {
-                    printf("gpio%d is low level!\n", gpio);
-                }
-                else if (ret == 1)
-                {
-                    printf("gpio%d is high level!\n", gpio);
-                }
-                else
-                {
-                    printf ("Get the value of gpio%d failed!\n", gpio);
-                }
+                continue;
             }
-            break;
+            gpio = atoi(scan_string);
+            ret = gpio_get_value(gpio);
+            if (ret == 0)
+            {
+                printf("gpio%d is low level!\n", gpio);
+            }
+            else if (ret == 1)
+            {
+                printf("gpio%d is high level!\n", gpio);
+            }
+            else
+            {
+                printf("Get the value of gpio%d failed!\n", gpio);
+            }
+        }
+        break;
         case 6:
+        {
+            int gpio;
+            int ret;
+            gpio_edge_type edge;
+            memset(scan_string, 0, sizeof(scan_string));
+            printf("\nPlease input which gpio you want to set:"); // input the addr
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
-                int gpio;
-                int ret;
-                gpio_edge_type edge;
-                memset(scan_string, 0, sizeof(scan_string));
-                printf("\nPlease input which gpio you want to set:"); //input the addr
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                {
-                    continue;
-                }
-                gpio = atoi(scan_string);
-
-
-                memset(scan_string, 0, sizeof(scan_string));
-                printf("\nPlease input which edge mode you want to set\n");
-                printf("(0 means none, 1 means rising, 2 means falling, 3 means both):");
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                {
-                    continue;
-                }
-                edge = atoi(scan_string);
-                
-                ret = gpio_set_isr(gpio,edge);
-                if (ret == 0)
-                {
-                    printf("Set gpio%d isr succeed!\n", gpio);
-                }
-                else
-                {
-                    printf("Set gpio%d isr failed!\n", gpio);
-                }
+                continue;
             }
-            break;
+            gpio = atoi(scan_string);
+
+            memset(scan_string, 0, sizeof(scan_string));
+            printf("\nPlease input which edge mode you want to set\n");
+            printf("(0 means none, 1 means rising, 2 means falling, 3 means both):");
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+            {
+                continue;
+            }
+            edge = atoi(scan_string);
+
+            ret = gpio_set_isr(gpio, edge);
+            if (ret == 0)
+            {
+                printf("Set gpio%d isr succeed!\n", gpio);
+            }
+            else
+            {
+                printf("Set gpio%d isr failed!\n", gpio);
+            }
+        }
+        break;
 
         default:
             break;
@@ -5876,7 +5840,7 @@ static void simcom_uart_test()
 
 #ifdef FEATURE_DEMO_SPI
 
-//extern int sim_ssp_bytes(SSPCONTROL_S *ctl, uint8_t *send, uint8_t *recv, uint32_t len);
+// extern int sim_ssp_bytes(SSPCONTROL_S *ctl, uint8_t *send, uint8_t *recv, uint32_t len);
 static void simcom_spi_test()
 {
     const char *options_list[] = {
@@ -5914,7 +5878,7 @@ static void simcom_spi_test()
             int len;
 
             memset(scan_string, 0, sizeof(scan_string));
-            printf("\nPlease input value format 0x30000000>"); //input the addr
+            printf("\nPlease input value format 0x30000000>"); // input the addr
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
 
@@ -5925,7 +5889,7 @@ static void simcom_spi_test()
 
             sscanf(scan_string, "%x", send);
             len = strlen(send);
-            //printf("malloc ok %d %s\r\n",len,send );
+            // printf("malloc ok %d %s\r\n",len,send );
             for (i = 0; i < len; i++)
                 printf("send[%d]=0x%x\n", i, send[i]);
 
@@ -5965,10 +5929,10 @@ void simcom_event_loc_ind(simcom_event_e event_id, void *data)
     case SIMCOM_EVENT_LOC_NMEA_BY_ROW_IND:
     {
         NMEA_LINE *len_data = (NMEA_LINE *)data;
-        printf("len_data->data %s\n",len_data->data);
-        printf("len_data->len %d\n",len_data->length);
+        printf("len_data->data %s\n", len_data->data);
+        printf("len_data->len %d\n", len_data->length);
     }
-        break;
+    break;
     default:
         break;
     }
@@ -5984,7 +5948,7 @@ static void simcom_gps_test()
     char data[512] = {0};
     char gpsfirminfo[100] = {0};
     int temp_ret;
-    
+
     const char *options_list[] = {
         "1. GET Location Info",
         "2. Cold Start",
@@ -6036,7 +6000,7 @@ static void simcom_gps_test()
         /*=======================================================================================*/
         case 1:
         {
-                if (simcom_loc_track_start() != EXIT_SUCCESS)
+            if (simcom_loc_track_start() != EXIT_SUCCESS)
             {
                 printf("Location track Failed!\n");
             }
@@ -6072,70 +6036,70 @@ static void simcom_gps_test()
         /*=======================================================================================*/
         case 5:
         {
-              simcom_loc_agnss_enable();
-              printf("Location agnss enable succeed!\n");
+            simcom_loc_agnss_enable();
+            printf("Location agnss enable succeed!\n");
         }
         break;
         /*=======================================================================================*/
         case 6:
         {
-              simcom_loc_agnss_disable();
-              printf("Location agnss disable succeed!\n");
+            simcom_loc_agnss_disable();
+            printf("Location agnss disable succeed!\n");
         }
         break;
         /*=======================================================================================*/
         case 7:
         {
-              if(simcom_loc_poweroff() != EXIT_SUCCESS)
-              {
+            if (simcom_loc_poweroff() != EXIT_SUCCESS)
+            {
                 printf("Location poweroff Failed!\n");
-              }
-              else
-              {
+            }
+            else
+            {
                 printf("Location poweroff succeed!\n");
-              }
+            }
         }
         break;
         /*=======================================================================================*/
         case 8:
         {
-              simcom_loc_dynamic_upgrade_disable();
-              printf("Location dynamic upgrade disable succeed!\n");
+            simcom_loc_dynamic_upgrade_disable();
+            printf("Location dynamic upgrade disable succeed!\n");
         }
         break;
         /*=======================================================================================*/
         case 9:
         {
-            memset(gpsfirminfo,0,sizeof(gpsfirminfo));
+            memset(gpsfirminfo, 0, sizeof(gpsfirminfo));
             temp_ret = simcom_loc_get_version_info(gpsfirminfo);
             if (temp_ret == 0)
             {
-                printf("%s\n",gpsfirminfo);
+                printf("%s\n", gpsfirminfo);
             }
             else
             {
-                printf("temp_ret: %d\n",temp_ret);
+                printf("temp_ret: %d\n", temp_ret);
             }
         }
         break;
-        
+
         case 10:
         {
             temp_ret = get_dynamic_status();
-            printf("%d\n",temp_ret);
+            printf("%d\n", temp_ret);
         }
         break;
-        
+
         case 11:
         {
             temp_ret = simcom_loc_send_gnss_cmd("$CFGSYS,H01");
             sleep(1);
             simcom_loc_send_gnss_cmd("$CFGMSG,0,5,1");
             simcom_loc_send_gnss_cmd("$CFGNMEA,h30");
-            printf("%d\n",temp_ret);
+            printf("%d\n", temp_ret);
         }
         break;
-        
+
         case 12:
         {
             GNSS_MODE mode;
@@ -6220,7 +6184,7 @@ static void simcom_gps_test()
 
 #ifdef FEATURE_DEMO_BT
 /**********************************************************************************
-         Bluetooth 
+         Bluetooth
 ************************************************************************************/
 static void bt_setTimespecRelative(struct timespec *p_ts, long long msec)
 {
@@ -6491,9 +6455,9 @@ void simcom_process_response(bt_msg *recv_msg)
 void ble_scan_info_list_display(ble_scan_info_node_ptr head)
 {
     ble_scan_info_node_ptr p;
-    if(head)
+    if (head)
     {
-      p = head->next;
+        p = head->next;
     }
     else
     {
@@ -6502,9 +6466,9 @@ void ble_scan_info_list_display(ble_scan_info_node_ptr head)
 
     while (p != NULL)
     {
-       printf("%-20s",p->addr);
-       printf("%s\n",p->name);
-       p = p->next;
+        printf("%-20s", p->addr);
+        printf("%s\n", p->name);
+        p = p->next;
     }
 }
 void ble_scan_info_list_destroy(ble_scan_info_node_ptr head)
@@ -6514,11 +6478,10 @@ void ble_scan_info_list_destroy(ble_scan_info_node_ptr head)
     {
         head = head->next;
         free(p);
-        //delete(p);
+        // delete(p);
         p = head;
     }
 }
-
 
 static void simcom_bt_test()
 {
@@ -6549,7 +6512,7 @@ static void simcom_bt_test()
     int ret = 0;
     char scan_string[100] = {0};
     int scan_state = 0;
-            
+
     while (1)
     {
         printf("\nPlease select an option to test from the items listed below.\n");
@@ -6559,74 +6522,74 @@ static void simcom_bt_test()
         memset(scan_string, 0, sizeof(scan_string));
         if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             continue;
-            
+
         /* Convert the option to an integer, and switch on the option entered. */
         opt = atoi(scan_string);
         switch (opt)
         {
         case 1:
+        {
+            ble_scan_info_node_ptr head;
+            printf("LE Scan start \n");
+            ret = ble_scan(&head);
+            if (ret != -1)
             {
-                ble_scan_info_node_ptr head;
-                printf("LE Scan start \n");
-                ret = ble_scan(&head);
-                if (ret != -1)
-                {
-                    ble_scan_info_list_display(head);
-                    ble_scan_info_list_destroy(head);
-                }
-                else
-                {
-                    printf("\n sta_scan failed! \n");
-                }
+                ble_scan_info_list_display(head);
+                ble_scan_info_list_destroy(head);
             }
-            break;
+            else
+            {
+                printf("\n sta_scan failed! \n");
+            }
+        }
+        break;
         case 2:
-            {
-                int sec;
-                int dst_type;
-                char dst_addr[100]={0};
-                connect_init(&sec,&dst_type,dst_addr);
-                bt_connect(sec,dst_type,dst_addr);
-            }
-            break;
+        {
+            int sec;
+            int dst_type;
+            char dst_addr[100] = {0};
+            connect_init(&sec, &dst_type, dst_addr);
+            bt_connect(sec, dst_type, dst_addr);
+        }
+        break;
         case 3:
-            {
-                get_characteristic();
-            }
-            break;
+        {
+            get_characteristic();
+        }
+        break;
         case 4:
-            {
-                char handle[16] = {0};
-                char value[32] = {0};
-                printf("Please enter the handle you want to operate on\n");
-                memset(handle, 0, sizeof(handle));
-                fgets(handle, sizeof(handle), stdin);
-                handle[strlen(handle) - 1] = '\0';
-                printf("Please enter the value you want to write\n");
-                memset(value, 0, sizeof(value));
-                fgets(value, sizeof(value), stdin);
-                char_write_cmd(handle,value);
-            }
-            break;
+        {
+            char handle[16] = {0};
+            char value[32] = {0};
+            printf("Please enter the handle you want to operate on\n");
+            memset(handle, 0, sizeof(handle));
+            fgets(handle, sizeof(handle), stdin);
+            handle[strlen(handle) - 1] = '\0';
+            printf("Please enter the value you want to write\n");
+            memset(value, 0, sizeof(value));
+            fgets(value, sizeof(value), stdin);
+            char_write_cmd(handle, value);
+        }
+        break;
         case 5:
+        {
+            int length, ret, i;
+            char buf[128] = {0};
+            ret = read_value(buf, &length);
+            if (ret == 0)
             {
-                int length,ret,i;
-                char buf[128] = {0};
-                ret = read_value(buf,&length);
-                if (ret == 0)
+                printf("value = ");
+                for (i = 0; i < length; i++)
                 {
-                    printf("value = ");
-                    for (i = 0;i < length;i++)
-                    {
-                        printf("%02x",buf[i]);
-                    }
+                    printf("%02x", buf[i]);
                 }
             }
-            break;
+        }
+        break;
         case 6:
-            {
-                ble_disconnect();
-            }
+        {
+            ble_disconnect();
+        }
         default:
             break;
         }
@@ -6637,7 +6600,6 @@ static void simcom_bt_test()
     }
 }
 
-    
 #if 0
     int array_size;
     char scan_string[40];
@@ -7447,7 +7409,7 @@ static void simcom_timer_test()
     int i, j;
     char scan_string[100] = {0};
 
-    set_freq_nanosecs(1000000000); //default 1s
+    set_freq_nanosecs(1000000000); // default 1s
 
     while (1)
     {
@@ -7626,8 +7588,8 @@ static void simcom_tcp_test()
     int i;
     int opt = 0;
     char ch;
-    char scan_string[1024 + 4]={0};
-    char send_string[1024 + 4]={0};
+    char scan_string[1024 + 4] = {0};
+    char send_string[1024 + 4] = {0};
 
     while (1)
     {
@@ -7679,14 +7641,14 @@ static void simcom_tcp_test()
                 continue;
             }
 
-            if (strlen(scan_string) >= 1027 )
+            if (strlen(scan_string) >= 1027)
             {
-                while((ch = getchar()) != '\n' && ch != EOF)
+                while ((ch = getchar()) != '\n' && ch != EOF)
                 {
                     ;
                 }
                 printf("the intput data is too long.\n");
-             }
+            }
             else
             {
                 int nret = simcom_handle_input_string(scan_string, strlen(scan_string), send_string, 1024, 0);
@@ -7861,8 +7823,8 @@ static void simcom_uim_test()
         {
             int retries_remaining = 0;
             char pin_code[16] = {0};
-        
-            printf("\nPlease input pin code,enter 4-8 digits>");            
+
+            printf("\nPlease input pin code,enter 4-8 digits>");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -7876,7 +7838,7 @@ static void simcom_uim_test()
             }
 
             memcpy(pin_code, scan_string, strlen(scan_string) - 1);
-            
+
             ret = enable_pin(pin_code, &retries_remaining);
             printf("ret=%d,retries_remaining=%d\n", ret, retries_remaining);
         }
@@ -7886,8 +7848,8 @@ static void simcom_uim_test()
         {
             int retries_remaining = 0;
             char pin_code[16] = {0};
-        
-            printf("\nPlease input pin code,enter 4-8 digits>");            
+
+            printf("\nPlease input pin code,enter 4-8 digits>");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -7901,7 +7863,7 @@ static void simcom_uim_test()
             }
 
             memcpy(pin_code, scan_string, strlen(scan_string) - 1);
-            
+
             ret = disable_pin(pin_code, &retries_remaining);
             printf("ret=%d,retries_remaining=%d\n", ret, retries_remaining);
         }
@@ -7911,8 +7873,8 @@ static void simcom_uim_test()
         {
             int retries_remaining = 0;
             char pin_code[16] = {0};
-        
-            printf("\nPlease input pin code,enter 4-8 digits>");            
+
+            printf("\nPlease input pin code,enter 4-8 digits>");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -7926,7 +7888,7 @@ static void simcom_uim_test()
             }
 
             memcpy(pin_code, scan_string, strlen(scan_string) - 1);
-            
+
             ret = enter_sim_pin(pin_code, &retries_remaining);
             printf("ret=%d,retries_remaining=%d\n", ret, retries_remaining);
         }
@@ -7938,8 +7900,8 @@ static void simcom_uim_test()
             char puk_code[16] = {0};
             char new_pin_code[16] = {0};
 
-            //input puk code
-            printf("\nPlease input puk code,enter 8 digits>");            
+            // input puk code
+            printf("\nPlease input puk code,enter 8 digits>");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -7953,8 +7915,8 @@ static void simcom_uim_test()
             }
             memcpy(puk_code, scan_string, strlen(scan_string) - 1);
 
-            //input new pin code
-            printf("\nPlease input new pin code,enter 4-8 digits>");            
+            // input new pin code
+            printf("\nPlease input new pin code,enter 4-8 digits>");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -7967,7 +7929,7 @@ static void simcom_uim_test()
             }
 
             memcpy(new_pin_code, scan_string, strlen(scan_string) - 1);
-            
+
             ret = enter_sim_puk(puk_code, new_pin_code, &retries_remaining);
             printf("ret=%d,retries_remaining=%d\n", ret, retries_remaining);
         }
@@ -7979,8 +7941,8 @@ static void simcom_uim_test()
             char pin_code[16] = {0};
             char new_pin_code[16] = {0};
 
-            //input old pin code
-            printf("\nPlease input pin code,enter 4-8 digits>");            
+            // input old pin code
+            printf("\nPlease input pin code,enter 4-8 digits>");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -7994,8 +7956,8 @@ static void simcom_uim_test()
             }
             memcpy(pin_code, scan_string, strlen(scan_string) - 1);
 
-            //input new pin code
-            printf("\nPlease input new pin code,enter 4-8 digits>");            
+            // input new pin code
+            printf("\nPlease input new pin code,enter 4-8 digits>");
             memset(scan_string, 0, sizeof(scan_string));
             if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
             {
@@ -8007,12 +7969,12 @@ static void simcom_uim_test()
                 continue;
             }
             memcpy(new_pin_code, scan_string, strlen(scan_string) - 1);
-            
+
             ret = change_pin(pin_code, new_pin_code, &retries_remaining);
             printf("ret=%d,retries_remaining=%d\n", ret, retries_remaining);
         }
-        break;        
-        
+        break;
+
         default:
             break;
         }
@@ -8148,10 +8110,10 @@ static void simcom_dms_test()
                 break;
             }
             printf("current system msecs: %lld\n", msecs);
-            printf("current system second: %lld\n", msecs/1000);
-            printf("current system time usec: %lld\n", msecs%1000);
+            printf("current system second: %lld\n", msecs / 1000);
+            printf("current system time usec: %lld\n", msecs % 1000);
         }
-        
+
         default:
             break;
         }
@@ -8219,7 +8181,6 @@ static void simcom_get_version()
         }
     }
 }
-
 
 #ifdef FEATURE_DEMO_FTP
 static char ftp_dl_save_path[128];
@@ -8312,331 +8273,331 @@ static void simcom_ftp_test()
         switch (opt)
         {
         case 1:
+        {
+            printf("please input IP address\n");
+            printf("For example:xx.xx.xx.xx\n");
+            printf("please input>");
+            memset(host, 0, sizeof(host));
+            if (fgets(host, sizeof(host), stdin) == NULL)
             {
-                printf("please input IP address\n");
-                printf("For example:xx.xx.xx.xx\n");
-                printf("please input>");
-                memset(host, 0, sizeof(host));
-                if(fgets(host, sizeof(host), stdin)==NULL)
-                {
-                    continue;
-                }
-
-                printf("please input user name\n");
-                printf("For example:xxx\n");
-                printf("please input>");
-                memset(user, 0, sizeof(user));
-                if(fgets(user, sizeof(user), stdin)==NULL)
-                {
-                    continue;
-                }
-
-                printf("please input password\n");
-                printf("For example:**********\n");
-                printf("please input>");
-                memset(password, 0, sizeof(password));
-                if(fgets(password, sizeof(password), stdin)==NULL)
-                {
-                    continue;
-                }
-
-                ret = ftp_login(host, 21, user, password);
-                if (ret == -1)
-                {
-                    printf("Login faild!\n");
-                    break;
-                }
-            }
-            break;
-        case 2: //Print work directory
-            {
-                char path[256] = {0};
-
-                ret = ftp_pwd(path);
-                if (ret != 0)
-                {
-                    printf("Print work directory fail!\n");
-                    break;
-                }
-                printf("Print work directory success!\n");
-            }
-            break;
-        case 3: //change work dir
-            {
-                char path[1024] = {0};
-                unsigned long long data_len;
-
-                printf("\nPlease input directory\n");
-                printf("  /  ------> prefix means absolute path, or else relative path\n");
-                printf("For example:  /test    test    ../test \n");
-                printf("please input>");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
-                memcpy(path, scan_string, strlen(scan_string) - 1);
-
-                ret = ftp_cwd(path);
-                if (ret != 0)
-                {
-                    printf("change work directory fail!\n");
-                }
-                else
-                {
-                    printf("change work directory success!\n");
-                }
             }
-            break;
-        case 4: //mkdir
-            {
-                char path[128] = {0};
-                unsigned long long data_len;
 
-                printf("Tips: input size less than 128!\n");
-                printf("please input>");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+            printf("please input user name\n");
+            printf("For example:xxx\n");
+            printf("please input>");
+            memset(user, 0, sizeof(user));
+            if (fgets(user, sizeof(user), stdin) == NULL)
+            {
+                continue;
+            }
+
+            printf("please input password\n");
+            printf("For example:**********\n");
+            printf("please input>");
+            memset(password, 0, sizeof(password));
+            if (fgets(password, sizeof(password), stdin) == NULL)
+            {
+                continue;
+            }
+
+            ret = ftp_login(host, 21, user, password);
+            if (ret == -1)
+            {
+                printf("Login faild!\n");
+                break;
+            }
+        }
+        break;
+        case 2: // Print work directory
+        {
+            char path[256] = {0};
+
+            ret = ftp_pwd(path);
+            if (ret != 0)
+            {
+                printf("Print work directory fail!\n");
+                break;
+            }
+            printf("Print work directory success!\n");
+        }
+        break;
+        case 3: // change work dir
+        {
+            char path[1024] = {0};
+            unsigned long long data_len;
+
+            printf("\nPlease input directory\n");
+            printf("  /  ------> prefix means absolute path, or else relative path\n");
+            printf("For example:  /test    test    ../test \n");
+            printf("please input>");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            memcpy(path, scan_string, strlen(scan_string) - 1);
+
+            ret = ftp_cwd(path);
+            if (ret != 0)
+            {
+                printf("change work directory fail!\n");
+            }
+            else
+            {
+                printf("change work directory success!\n");
+            }
+        }
+        break;
+        case 4: // mkdir
+        {
+            char path[128] = {0};
+            unsigned long long data_len;
+
+            printf("Tips: input size less than 128!\n");
+            printf("please input>");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
                 continue;
 
-                ret = simcom_handle_input_string(scan_string, strlen(scan_string), path, 128, 1);
-                if(0 != ret)
-                {
-                    if(-1 == ret)
-                    {
-                        printf("input length too short!\n");
-                    }
-                    else if(1 == ret)
-                    {
-                        printf("input length too long!\n");
-                    }
-                    else if(2 == ret)
-                    {
-                        printf("add \\n failed!\n");
-                    }
-                }
-                
-                ret = ftp_mkdir(path);
-                if (ret != 0)
-                {
-                    printf("create fail!\n");
-                }
-                else
-                {
-                    printf("create success!\n");
-                }
-            }
-            break;
-        case 5: //rename move
+            ret = simcom_handle_input_string(scan_string, strlen(scan_string), path, 128, 1);
+            if (0 != ret)
             {
-                char s_path[1024] = {0};
-                char d_path[1024] = {0};
-                unsigned long long data_len;
-
-                printf("\nPlease input source directory or filename\n");
-                printf("  /  ------> prefix means absolute path, or else relative path\n");
-                printf("For example:  /test    test   test/test.ini  ../test \n");
-                printf("please input>");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                memcpy(s_path, scan_string, strlen(scan_string) - 1);
-                printf("\nPlease input destination directory or filename\n");
-				printf("Tips: input size less than 128!\n");
-                printf("please input>");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                //memcpy(d_path, scan_string, strlen(scan_string) - 1);
-                ret = simcom_handle_input_string(scan_string, strlen(scan_string), d_path, 128, 1);
-                if(0 != ret)
+                if (-1 == ret)
                 {
-                    if(-1 == ret)
-                    {
-                        printf("input length too short!\n");
-                    }
-                    else if(1 == ret)
-                    {
-                        printf("input length too long!\n");
-                    }
-                    else if(2 == ret)
-                    {
-                        printf("add \\n failed!\n");
-                    }
+                    printf("input length too short!\n");
                 }
-
-                ret = ftp_mv(s_path, d_path);
-                if (ret != 0)
+                else if (1 == ret)
                 {
-                    printf("rename or move fail!\n");
+                    printf("input length too long!\n");
                 }
-                else
+                else if (2 == ret)
                 {
-                    printf("rename or move success!\n");
+                    printf("add \\n failed!\n");
                 }
             }
-            break;
-        case 6: //delete file
+
+            ret = ftp_mkdir(path);
+            if (ret != 0)
             {
-                char path[1024] = {0};
-                unsigned long long data_len;
-
-                printf("\nPlease input file\n");
-                printf("  /  ------> prefix means absolute path, or else relative path\n");
-                printf("For example:  /test/test.ini   test.ini  ../test/test.ini \n");
-                printf("please input>");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                memcpy(path, scan_string, strlen(scan_string) - 1);
-
-                ret = ftp_deltefile(path);
-                if (ret != 0)
-                {
-                    printf("delete file fail!\n");
-                }
-                else
-                {
-                    printf("delete file success!\n");
-                }
+                printf("create fail!\n");
             }
-            break;
-        case 7: //ftp_delete folder
+            else
             {
-                char path[1024] = {0};
-                unsigned long long data_len;
+                printf("create success!\n");
+            }
+        }
+        break;
+        case 5: // rename move
+        {
+            char s_path[1024] = {0};
+            char d_path[1024] = {0};
+            unsigned long long data_len;
 
-                printf("\nPlease input file\n");
-                printf("  /  ------> prefix means absolute path, or else relative path\n");
-                printf("For example:  /test  test  ../test/test.ini \n");
-                printf("please input>");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                memcpy(path, scan_string, strlen(scan_string) - 1);
-
-                ret = ftp_deletefolder(path);
-                if (ret != 0)
+            printf("\nPlease input source directory or filename\n");
+            printf("  /  ------> prefix means absolute path, or else relative path\n");
+            printf("For example:  /test    test   test/test.ini  ../test \n");
+            printf("please input>");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            memcpy(s_path, scan_string, strlen(scan_string) - 1);
+            printf("\nPlease input destination directory or filename\n");
+            printf("Tips: input size less than 128!\n");
+            printf("please input>");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            // memcpy(d_path, scan_string, strlen(scan_string) - 1);
+            ret = simcom_handle_input_string(scan_string, strlen(scan_string), d_path, 128, 1);
+            if (0 != ret)
+            {
+                if (-1 == ret)
                 {
-                    printf("delete folder fail!\n");
+                    printf("input length too short!\n");
                 }
-                else
+                else if (1 == ret)
                 {
-                    printf("delete folder success!\n");
+                    printf("input length too long!\n");
+                }
+                else if (2 == ret)
+                {
+                    printf("add \\n failed!\n");
                 }
             }
-            break;
+
+            ret = ftp_mv(s_path, d_path);
+            if (ret != 0)
+            {
+                printf("rename or move fail!\n");
+            }
+            else
+            {
+                printf("rename or move success!\n");
+            }
+        }
+        break;
+        case 6: // delete file
+        {
+            char path[1024] = {0};
+            unsigned long long data_len;
+
+            printf("\nPlease input file\n");
+            printf("  /  ------> prefix means absolute path, or else relative path\n");
+            printf("For example:  /test/test.ini   test.ini  ../test/test.ini \n");
+            printf("please input>");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            memcpy(path, scan_string, strlen(scan_string) - 1);
+
+            ret = ftp_deltefile(path);
+            if (ret != 0)
+            {
+                printf("delete file fail!\n");
+            }
+            else
+            {
+                printf("delete file success!\n");
+            }
+        }
+        break;
+        case 7: // ftp_delete folder
+        {
+            char path[1024] = {0};
+            unsigned long long data_len;
+
+            printf("\nPlease input file\n");
+            printf("  /  ------> prefix means absolute path, or else relative path\n");
+            printf("For example:  /test  test  ../test/test.ini \n");
+            printf("please input>");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            memcpy(path, scan_string, strlen(scan_string) - 1);
+
+            ret = ftp_deletefolder(path);
+            if (ret != 0)
+            {
+                printf("delete folder fail!\n");
+            }
+            else
+            {
+                printf("delete folder success!\n");
+            }
+        }
+        break;
         case 8: // get file size
+        {
+            char path[1024] = {0};
+            long long size;
+
+            printf("\nPlease input file path\n");
+            printf("  /  ------> prefix means absolute path, or else relative path\n");
+            printf("For example:  /test/test.ini    test.ini\n");
+            printf("please input>");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            memcpy(path, scan_string, strlen(scan_string) - 1);
+
+            ret = ftp_size(path, &size);
+            if (ret != 0)
             {
-                char path[1024] = {0};
-                long long size;
+                printf("get size fail!\n");
+            }
+            else
+            {
+                printf("size: %lld!\n", size);
+            }
+        }
+        break;
+        case 9: // download file
+        {
+            unsigned long long stor_size;
+            char *p;
+            char path[1024] = {0};
 
-                printf("\nPlease input file path\n");
-                printf("  /  ------> prefix means absolute path, or else relative path\n");
-                printf("For example:  /test/test.ini    test.ini\n");
-                printf("please input>");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                memcpy(path, scan_string, strlen(scan_string) - 1);
-
-                ret = ftp_size(path, &size);
-                if (ret != 0)
+            printf("\nPlease input file path\n");
+            printf("  /  ------> prefix means absolute path, or else relative path\n");
+            printf("For example:  /test/test.ini    test.ini\n");
+            printf("please input>");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            memcpy(path, scan_string, strlen(scan_string) - 1);
+            p = strrchr(path, '/');
+            if (p == NULL)
+            {
+                sprintf(ftp_dl_save_path, "/data/%s", path);
+            }
+            else
+            {
+                if (strlen(p + 1) > 0)
                 {
-                    printf("get size fail!\n");
+                    sprintf(ftp_dl_save_path, "/data/%s", p + 1);
                 }
                 else
                 {
-                    printf("size: %lld!\n", size);
+                    sprintf(ftp_dl_save_path, "/data/%s", "unkonw_name");
                 }
             }
-            break;
-        case 9: //download file
+
+            ret = ftp_download(path, process_ftp_dl_recv_data);
+            if (ret != 0)
             {
-                unsigned long long stor_size;
-                char *p;
-                char path[1024] = {0};
-
-                printf("\nPlease input file path\n");
-                printf("  /  ------> prefix means absolute path, or else relative path\n");
-                printf("For example:  /test/test.ini    test.ini\n");
-                printf("please input>");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                memcpy(path, scan_string, strlen(scan_string) - 1);
-                p = strrchr(path, '/');
-                if (p == NULL)
-                {
-                    sprintf(ftp_dl_save_path, "/data/%s", path);
-                }
-                else
-                {
-                    if (strlen(p + 1) > 0)
-                    {
-                        sprintf(ftp_dl_save_path, "/data/%s", p + 1);
-                    }
-                    else
-                    {
-                        sprintf(ftp_dl_save_path, "/data/%s", "unkonw_name");
-                    }
-                }
-
-                ret = ftp_download(path, process_ftp_dl_recv_data);
-                if (ret != 0)
-                {
-                    printf("download file fail!\n");
-                }
-                else
-                {
-                    printf("download file success!\n");
-                }
+                printf("download file fail!\n");
             }
-            break;
-        case 10: //upload file
+            else
             {
-                unsigned long long stor_size;
-                char *p;
-                char path[256] = {0};
-                char local_path[256] = {0};
-
-                printf("please input local file path(For example: /data/test.ini)>");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                memcpy(local_path, scan_string, strlen(scan_string) - 1);
-                printf("\nPlease input file path\n");
-                printf("  /  ------> prefix means absolute path, or else relative path\n");
-                printf("For example:  /test/test.ini    test.ini\n");
-                printf("please input>");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                memcpy(path, scan_string, strlen(scan_string) - 1);
-
-                p = strrchr(path, '/');
-
-                ret = ftp_upload(local_path, path);
-
-                if (ret != 0)
-                {
-                    printf("upload file fail!\n");
-                }
-                else
-                {
-                    printf("upload file success!\n");
-                }
+                printf("download file success!\n");
             }
-            break;
-        case 11: //Logout
+        }
+        break;
+        case 10: // upload file
+        {
+            unsigned long long stor_size;
+            char *p;
+            char path[256] = {0};
+            char local_path[256] = {0};
+
+            printf("please input local file path(For example: /data/test.ini)>");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            memcpy(local_path, scan_string, strlen(scan_string) - 1);
+            printf("\nPlease input file path\n");
+            printf("  /  ------> prefix means absolute path, or else relative path\n");
+            printf("For example:  /test/test.ini    test.ini\n");
+            printf("please input>");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            memcpy(path, scan_string, strlen(scan_string) - 1);
+
+            p = strrchr(path, '/');
+
+            ret = ftp_upload(local_path, path);
+
+            if (ret != 0)
             {
-                ret = ftp_logout();
-                if (ret == -1)
-                {
-                    printf("No login, please log in first and then log out \n");
-                    break;
-                }
-                    printf("ftp logout success!\n");
-                }
-            break;
+                printf("upload file fail!\n");
+            }
+            else
+            {
+                printf("upload file success!\n");
+            }
+        }
+        break;
+        case 11: // Logout
+        {
+            ret = ftp_logout();
+            if (ret == -1)
+            {
+                printf("No login, please log in first and then log out \n");
+                break;
+            }
+            printf("ftp logout success!\n");
+        }
+        break;
 
         case 99:
             break;
@@ -8716,7 +8677,7 @@ static void simcom_http_s_test()
     char rename[32] = {0};
     char cainfo[50] = {0};
     int ca_flag = 0;
-	char client_crt[50] = {0};
+    char client_crt[50] = {0};
     char client_key[50] = {0};
 
     while (1)
@@ -8777,7 +8738,7 @@ static void simcom_http_s_test()
             https_get(url, rename, ca_flag, cainfo);
             break;
 
-		case 3:
+        case 3:
 
             printf("\nPlease Input the url:\n>");
             memset(url, 0, sizeof(url));
@@ -8966,7 +8927,7 @@ static void simcom_mqtt_s_test()
                 }
                 else
                 {
-                    host[strlen(host)-1] = 0;
+                    host[strlen(host) - 1] = 0;
                     break;
                 }
             }
@@ -8997,7 +8958,7 @@ static void simcom_mqtt_s_test()
                 }
                 else
                 {
-                    host[strlen(host)-1] = 0;
+                    host[strlen(host) - 1] = 0;
                     break;
                 }
             }
@@ -9028,7 +8989,7 @@ static void simcom_mqtt_s_test()
                 }
                 else
                 {
-                    host[strlen(host)-1] = 0;
+                    host[strlen(host) - 1] = 0;
                     break;
                 }
             }
@@ -9056,7 +9017,7 @@ static void simcom_mqtt_s_test()
                 }
                 else
                 {
-                    cafile[strlen(cafile)-1] = 0;
+                    cafile[strlen(cafile) - 1] = 0;
                     break;
                 }
             }
@@ -9070,7 +9031,7 @@ static void simcom_mqtt_s_test()
                 }
                 else
                 {
-                    certfile[strlen(certfile)-1] = 0;
+                    certfile[strlen(certfile) - 1] = 0;
                     break;
                 }
             }
@@ -9084,7 +9045,7 @@ static void simcom_mqtt_s_test()
                 }
                 else
                 {
-                    keyfile[strlen(keyfile)-1] = 0;
+                    keyfile[strlen(keyfile) - 1] = 0;
                     break;
                 }
             }
@@ -9102,7 +9063,7 @@ static void simcom_mqtt_s_test()
                 }
                 else
                 {
-                    host[strlen(host)-1] = 0;
+                    host[strlen(host) - 1] = 0;
                     break;
                 }
             }
@@ -9130,7 +9091,7 @@ static void simcom_mqtt_s_test()
                 }
                 else
                 {
-                    cafile[strlen(cafile)-1] = 0;
+                    cafile[strlen(cafile) - 1] = 0;
                     break;
                 }
             }
@@ -9144,7 +9105,7 @@ static void simcom_mqtt_s_test()
                 }
                 else
                 {
-                    certfile[strlen(certfile)-1] = 0;
+                    certfile[strlen(certfile) - 1] = 0;
                     break;
                 }
             }
@@ -9158,7 +9119,7 @@ static void simcom_mqtt_s_test()
                 }
                 else
                 {
-                    keyfile[strlen(keyfile)-1] = 0;
+                    keyfile[strlen(keyfile) - 1] = 0;
                     break;
                 }
             }
@@ -9182,20 +9143,20 @@ static void simcom_json_test()
 }
 static void simcom_system_test()
 {
-    const char *options_list[] = 
-    {
-        "1. recover factory",
-        "2. reboot",
-        "3. set autosleep",
-        "4. creat wake_lock",
-        "5. remove wake_lock",
-        "6. View wakeup lock",
-        "7. get the CPU usage",
-        "8. get the Memory usage",
-        "9. set system timezone",
-        "10. shutdown",
-        "99. Back",
-    };
+    const char *options_list[] =
+        {
+            "1. recover factory",
+            "2. reboot",
+            "3. set autosleep",
+            "4. creat wake_lock",
+            "5. remove wake_lock",
+            "6. View wakeup lock",
+            "7. get the CPU usage",
+            "8. get the Memory usage",
+            "9. set system timezone",
+            "10. shutdown",
+            "99. Back",
+        };
     char scan_string[128] = {0};
     int opt = 0;
     int ret;
@@ -9214,168 +9175,168 @@ static void simcom_system_test()
         opt = atoi(scan_string);
         switch (opt)
         {
-            case 1:
+        case 1:
+        {
+            printf("Waiting...\n");
+            ret = reset_factory();
+            if (ret == 0)
             {
-                printf("Waiting...\n");
-                ret = reset_factory();
-                if (ret == 0)
-                {
-                    printf("recover factory faild\n");
-                }
+                printf("recover factory faild\n");
             }
+        }
+        break;
+        case 2:
+        {
+            printf("Waiting...\n");
+            ret = reboot();
+            if (ret == 0)
+            {
+                printf("reboot faild\n");
+            }
+        }
+        break;
+
+        case 3:
+        {
+            printf("\nPlease input option 1 -- enable autosleep, 0 --disable autosleeep:\n");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+            {
+                continue;
+            }
+            int choice = atoi(scan_string);
+            ret = autosleep_enable(choice);
+
+            if (ret)
+            {
+                if (choice == DISABLE_AUTO_SLEEP)
+                {
+                    printf("disable autosleep successful!\n");
+                }
+                else if (choice == ENABLE_AUTO_SLEEP)
+                {
+                    printf("enable autosleep successful!\n");
+                }
                 break;
-            case 2:
-            {
-                printf("Waiting...\n");
-                ret = reboot();
-                if (ret == 0)
-                {
-                    printf("reboot faild\n");
-                }
             }
+            else
+            {
+                printf("enable autosleep fail!\n");
                 break;
-            
-            case 3:
-            {
-                printf("\nPlease input option 1 -- enable autosleep, 0 --disable autosleeep:\n");
-                memset(scan_string, 0, sizeof(scan_string));
-                if(fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                {
-                    continue;
-                }
-                int choice = atoi(scan_string);
-                ret = autosleep_enable(choice);
-                
-                if (ret)
-                {
-                    if(choice == DISABLE_AUTO_SLEEP)
-                    {
-                        printf("disable autosleep successful!\n");
-                    }
-                    else if(choice == ENABLE_AUTO_SLEEP)
-                    {
-                        printf("enable autosleep successful!\n");
-                    }
-                    break;
-                }
-                else
-                {
-                    printf("enable autosleep fail!\n");
-                    break;
-                }
             }
+        }
+        break;
+
+        case 4:
+        {
+            printf("\nPlease enter a wakeup lock name:");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            char lock_name[50] = {0};
+            strncpy(lock_name, scan_string, strlen(scan_string) - 1);
+            printf("\nSET hold time(ms) (0 :Not setting the time)\n");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            unsigned long time_out = atol(scan_string);
+            if (creat_soure_lock(lock_name, time_out) == true)
+            {
+                printf("creat successful!\n");
+            }
+            else
+            {
+                printf("creat failed!\n");
+            }
+        }
+        break;
+
+        case 5:
+        {
+            printf("\nEnter the wakeup lock to remove\n");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            char unlock_name[50] = {0};
+            strncpy(unlock_name, scan_string, strlen(scan_string) - 1);
+            remove_soure_lock(unlock_name);
+            printf("remove successful!\n");
+        }
+        break;
+
+        case 6:
+        {
+            int ret = view_soure_lock();
+            if (!ret)
+            {
+                printf("view fail!\n");
+            }
+        }
+        break;
+
+        case 7:
+        {
+            ret = get_cpu_usage(&cpuusage);
+            if (!ret)
+            {
+                printf("Faild to get cpu usage\n");
+            }
+            else
+            {
+                printf("CPU USE(The percentage): %d\n", cpuusage);
+            }
+        }
+        break;
+
+        case 8:
+        {
+            ret = get_memory_usage(&memoryusage);
+            if (!ret)
+            {
+                printf("Faild to get cpu usage\n");
+            }
+            else
+            {
+                printf("Memory Usage(The percentage): %d\n", memoryusage);
+            }
+        }
+        break;
+
+        case 9:
+        {
+            int timezone;
+            printf("\nPlease input a corret timezone(0-24):");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+            {
+                continue;
+            }
+            timezone = atoi(scan_string);
+            ret = set_system_timezone(timezone);
+            if (!ret)
+            {
+                printf("Faild to set timezone\n");
+            }
+            else
+            {
+                printf("Set Timezone successful\n");
+            }
+        }
+        break;
+
+        case 10:
+        {
+            printf("Waiting...\n");
+            ret = power_off();
+            if (ret == 0)
+            {
+                printf("shutdown faild\n");
+            }
+        }
+        break;
+
+        default:
             break;
-
-            case 4:
-            {
-                printf("\nPlease enter a wakeup lock name:");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                char lock_name[50] = {0};
-                strncpy(lock_name, scan_string, strlen(scan_string) - 1);
-                printf("\nSET hold time(ms) (0 :Not setting the time)\n");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                unsigned long time_out = atol(scan_string);
-                if (creat_soure_lock(lock_name,time_out) == true)
-                {
-                    printf("creat successful!\n");
-                }
-                else
-                {
-                    printf("creat failed!\n");
-                }
-            }
-            break;
-
-            case 5:
-            {
-                printf("\nEnter the wakeup lock to remove\n");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                char unlock_name[50] = {0};
-                strncpy(unlock_name,scan_string,strlen(scan_string)-1);
-                remove_soure_lock(unlock_name);
-                printf("remove successful!\n");
-            }
-            break;
-
-            case 6:
-            {
-                int ret = view_soure_lock();
-                if(!ret)
-                {
-                    printf("view fail!\n");
-                }
-            }
-            break;
-
-            case 7:
-            {
-                ret = get_cpu_usage(&cpuusage);
-                if (!ret)
-                {
-                    printf("Faild to get cpu usage\n");
-                }
-                else
-                {
-                    printf("CPU USE(The percentage): %d\n",cpuusage);
-                }
-            }
-            break;
-
-            case 8:
-            {
-                ret = get_memory_usage(&memoryusage);
-                if (!ret)
-                {
-                    printf("Faild to get cpu usage\n");
-                }
-                else
-                {
-                    printf("Memory Usage(The percentage): %d\n",memoryusage);
-                }
-             }
-             break;
-
-            case 9:
-            {
-                int timezone;
-                printf("\nPlease input a corret timezone(0-24):");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                {
-                    continue;
-                }
-                timezone = atoi(scan_string);
-                ret = set_system_timezone(timezone);
-                if (!ret)
-                {
-                    printf("Faild to set timezone\n");
-                }
-                else
-                {
-                    printf("Set Timezone successful\n");
-                }
-            }
-              break;
-
-            case 10:
-            {
-                printf("Waiting...\n");
-                ret = power_off();
-                if (ret == 0)
-                {
-                    printf("shutdown faild\n");
-                }
-            }
-            break;
-
-            default:
-                break;
         }
         if (opt == 99)
         {
@@ -9401,19 +9362,19 @@ static void simcom_phonebook_test()
     }
 
     const char *error_list[] =
-    {
-        "SUCCESS",
-        "pb not init",
-        "ril not init",
-        "not find contact",
-        "malloc faild",
-        "error input",
-        "storage full",
-        "storage empty",
-        "set sm faild",
-        "set format faild",
-        "unknown error",
-    };
+        {
+            "SUCCESS",
+            "pb not init",
+            "ril not init",
+            "not find contact",
+            "malloc faild",
+            "error input",
+            "storage full",
+            "storage empty",
+            "set sm faild",
+            "set format faild",
+            "unknown error",
+        };
 
     const char *options_list[] = {
         "1. addnew pb",
@@ -9438,174 +9399,173 @@ static void simcom_phonebook_test()
         opt = atoi(scan_string);
         switch (opt)
         {
-            case 1:
+        case 1:
+        {
+            contact_info info = {0};
+
+            printf("input contact name:");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            strcpy(info.name, scan_string);
+            info.name[strlen(info.name) - 1] = '\0'; // clear '\n'
+
+            printf("input contact number:");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            strcpy(info.number, scan_string);
+            info.number[strlen(info.number) - 1] = '\0';
+
+            ret = add_new_contact(info, &(info.index));
+            if (ret)
             {
-                contact_info info = {0};
-
-                printf("input contact name:");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                strcpy(info.name, scan_string);
-                info.name[strlen(info.name) - 1] = '\0';          //clear '\n'
-
-                printf("input contact number:");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                strcpy(info.number, scan_string);
-                info.number[strlen(info.number) - 1] = '\0';
-
-                ret = add_new_contact(info, &(info.index));
-                if(ret)
-                {
-                    printf("add contact faild: %s\n", error_list[ret]);
-                }
-                else
-                {
-                    printf("********************************************\n");
-                    printf("index:%d\n", info.index);
-                    printf("********************************************\n");
-                }
+                printf("add contact faild: %s\n", error_list[ret]);
             }
+            else
+            {
+                printf("********************************************\n");
+                printf("index:%d\n", info.index);
+                printf("********************************************\n");
+            }
+        }
+        break;
+
+        case 2:
+        {
+            printf("input contact index:");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+
+            int index = atoi(scan_string);
+            ret = delete_contact(index);
+            if (ret)
+            {
+                printf("delete contact faild: %s\n", error_list[ret]);
+            }
+            else
+            {
+                printf("delete success\n");
+            }
+        }
+        break;
+
+        case 3:
+        {
+            contact_info info = {0};
+
+            printf("input contact index:");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            info.index = atoi(scan_string);
+
+            printf("input contact name:");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            strcpy(info.name, scan_string);
+            info.name[strlen(info.name) - 1] = '\0';
+
+            printf("input contact number:");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+            strcpy(info.number, scan_string);
+            info.number[strlen(info.number) - 1] = '\0';
+
+            ret = set_contact_info(info);
+            if (ret)
+            {
+                printf("edit contact faild: %s\n", error_list[ret]);
+            }
+            else
+            {
+                printf("edit success\n");
+            }
+        }
+        break;
+
+        case 4:
+        {
+            contact_info *info = malloc(sizeof(contact_info));
+            memset(info, 0, sizeof(contact_info));
+
+            printf("input index:");
+            memset(scan_string, 0, sizeof(scan_string));
+            if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
+                continue;
+
+            int index = atoi(scan_string);
+            ret = get_contact_info(index, info);
+            if (ret)
+            {
+                printf("get contact info: %s\n", error_list[ret]);
+            }
+            else
+            {
+                printf("********************************************\n");
+                printf("index: %d\nname:%s\nnumber:%s\n", info->index, info->name, info->number);
+                printf("********************************************\n");
+                free_contact_info(info);
+            }
+        }
+        break;
+
+        case 5:
+        {
+            contact_node *head = NULL;
+            ret = get_contact_list(&head);
+            if (ret)
+            {
+                printf("get contact list faild: %s\n", error_list[ret]);
+            }
+            else
+            {
+                contact_node *pos = head;
+                printf("********************************************\n");
+                while (pos)
+                {
+                    printf("index=%d,number=%s,name=%s\n", pos->info->index,
+                           pos->info->number ? pos->info->number : "",
+                           pos->info->name ? pos->info->name : "");
+                    pos = pos->next;
+                }
+                printf("********************************************\n");
+                free_contact_list(&head);
+            }
+        }
+        break;
+
+        case 6:
+        {
+            int used = 0;
+            int total = 0;
+            ret = get_storage_status(&used, &total);
+            if (ret)
+            {
+                printf("get storage status faild: %s\n", error_list[ret]);
+            }
+            else
+            {
+                printf("********************************************\n");
+                printf("used:%d, total:%d\n", used, total);
+                printf("********************************************\n");
+            }
+        }
+        break;
+
+        case 99:
+        {
             break;
+        }
 
-            case 2:
-            {
-                printf("input contact index:");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-
-                int index = atoi(scan_string);
-                ret = delete_contact(index);
-                if(ret)
-                {
-                    printf("delete contact faild: %s\n", error_list[ret]);
-                }
-                else
-                {
-                    printf("delete success\n");
-                }
-            }
-            break;
-
-            case 3:
-            {
-                contact_info info = {0};
-
-                printf("input contact index:");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                info.index = atoi(scan_string);
-
-                printf("input contact name:");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                strcpy(info.name, scan_string);
-                info.name[strlen(info.name) - 1] = '\0';
-
-                printf("input contact number:");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-                strcpy(info.number, scan_string);
-                info.number[strlen(info.number) - 1] = '\0';
-
-                ret = set_contact_info(info);
-                if(ret)
-                {
-                    printf("edit contact faild: %s\n", error_list[ret]);
-                }
-                else
-                {
-                    printf("edit success\n");
-                }
-            }
-            break;
-
-            case 4:
-            {
-                contact_info *info = malloc(sizeof(contact_info));
-                memset(info, 0, sizeof(contact_info));
-
-                printf("input index:");
-                memset(scan_string, 0, sizeof(scan_string));
-                if (fgets(scan_string, sizeof(scan_string), stdin) == NULL)
-                    continue;
-
-                int index = atoi(scan_string);
-                ret = get_contact_info(index, info);
-                if(ret)
-                {
-                    printf("get contact info: %s\n", error_list[ret]);
-                }
-                else
-                {
-                    printf("********************************************\n");
-                    printf("index: %d\nname:%s\nnumber:%s\n",info->index, info->name, info->number);
-                    printf("********************************************\n");
-                    free_contact_info(info);
-                }
-            }
-            break;
-
-            case 5:
-            {
-                contact_node *head= NULL;
-                ret = get_contact_list(&head);
-                if (ret)
-                {
-                    printf("get contact list faild: %s\n", error_list[ret]);
-                }
-                else
-                {
-                    contact_node *pos = head;
-                    printf("********************************************\n");
-                    while(pos)
-                    {
-                        printf("index=%d,number=%s,name=%s\n", pos->info->index,
-                            pos->info->number ? pos->info->number : "", 
-                            pos->info->name ? pos->info->name : "");
-                        pos = pos->next;
-                    }
-                    printf("********************************************\n");
-                    free_contact_list(&head);
-                }
-            }
-            break;
-
-            case 6:
-            {
-                int used = 0;
-                int total = 0;
-                ret = get_storage_status(&used, &total);
-                if(ret)
-                {
-                   printf("get storage status faild: %s\n", error_list[ret]);
-                }
-                else
-                {
-                    printf("********************************************\n");
-                    printf("used:%d, total:%d\n",used, total);
-                    printf("********************************************\n");
-                }
-            }
-            break;
-
-            case 99:
-            {
-                break;
-            }
-
-            default:
-            {
-                printf("not support");
-            }
-            break;
-
+        default:
+        {
+            printf("not support");
+        }
+        break;
         }
         if (opt == 99)
         {
@@ -9627,8 +9587,7 @@ static void simcom_dmz_test()
         "1. set DMZ",
         "2. get DMZ",
         "3. close DMZ",
-        "99. back"
-        };
+        "99. back"};
 
     while (1)
     {
@@ -9644,52 +9603,51 @@ static void simcom_dmz_test()
         switch (opt)
         {
         case 1:
-            {
-                printf("please input IP address\n");
-                printf("For example:xx.xx.xx.xx\n");
-                printf("please input>");
-                memset(host, 0, sizeof(host));
-                if (fgets(host, sizeof(host), stdin) == NULL)
+        {
+            printf("please input IP address\n");
+            printf("For example:xx.xx.xx.xx\n");
+            printf("please input>");
+            memset(host, 0, sizeof(host));
+            if (fgets(host, sizeof(host), stdin) == NULL)
                 continue;
-                host[strlen(host) - 1] = 0;
-                ret = set_dmz_ip(host);
-                if (ret == -1)
-                {
-                    printf("Please enter the correct IP address\n");
-                }
-                else
-                {
-                    printf("Set up DMZ ip success\n");
-                }
-                
+            host[strlen(host) - 1] = 0;
+            ret = set_dmz_ip(host);
+            if (ret == -1)
+            {
+                printf("Please enter the correct IP address\n");
             }
-            break;
+            else
+            {
+                printf("Set up DMZ ip success\n");
+            }
+        }
+        break;
         case 2:
+        {
+            memset(host, 0, sizeof(host));
+            ret = get_dmz_ip(host);
+            if (ret == -1)
             {
-                memset(host, 0, sizeof(host));
-                ret = get_dmz_ip(host);
-                if (ret == -1)
-                {
-                    printf("Get ip is faild,Please set the IP address of the DMZ\n");
-                }
-                else
-                {
-                    printf("DMZ ip = %s\n", host);
-                }
+                printf("Get ip is faild,Please set the IP address of the DMZ\n");
             }
-            break;
+            else
+            {
+                printf("DMZ ip = %s\n", host);
+            }
+        }
+        break;
         case 3:
+        {
+            ret = close_dmz();
+            if (ret == -1)
             {
-                ret = close_dmz();
-                if (ret == -1)
-                {
-                    printf("close the dmz is faild\n");
-                }
-                else
-                {
-                    printf("The DMZ is shut down successfully, and the IP address of the DMZ is cleared\n");
-                }
+                printf("close the dmz is faild\n");
             }
+            else
+            {
+                printf("The DMZ is shut down successfully, and the IP address of the DMZ is cleared\n");
+            }
+        }
         case 99:
             break;
         default:
@@ -9710,7 +9668,7 @@ void get_parameter_string(char *scan_string, unsigned int len)
     {
         printf(">");
         memset(scan_string, 0, len);
-        if (fgets(scan_string, len, stdin)  == NULL || strlen(scan_string) <= 1)
+        if (fgets(scan_string, len, stdin) == NULL || strlen(scan_string) <= 1)
         {
             continue;
         }
@@ -9760,7 +9718,7 @@ unsigned int get_option(const char *options_list[], unsigned int size)
         printf("Option > ");
 
         memset(scan_string, 0, sizeof(scan_string));
-        if (fgets(scan_string, sizeof(scan_string), stdin)  == NULL || strlen(scan_string) <= 1)
+        if (fgets(scan_string, sizeof(scan_string), stdin) == NULL || strlen(scan_string) <= 1)
         {
             continue;
         }
@@ -9791,11 +9749,11 @@ static void simcom_ecall_test()
         "6. Automatically initiated eCall",
         "99. back",
     };
-        if(Ecall_init(process_simcom_ind_message) != 0)
-        {
-            printf("Ecall_init failed\n");
-            return;
-        }
+    if (Ecall_init(process_simcom_ind_message) != 0)
+    {
+        printf("Ecall_init failed\n");
+        return;
+    }
 
     unsigned int list_size = sizeof(options_list) / sizeof(options_list[0]);
     while (1)
@@ -9803,210 +9761,194 @@ static void simcom_ecall_test()
         opt = get_option(options_list, list_size);
         switch (opt)
         {
-            case 1:
+        case 1:
+        {
+            char phone[MAX_SCAN_LENGTH] = {0};
+            ecall_handle h_ecall;
+            printf("please input the PSAP test number:\n");
+            get_parameter_string(phone, sizeof(phone));
+
+            if (Ecall_Start(phone, &h_ecall) != SIMCOMDEMO_TRUE)
             {
-                char phone[MAX_SCAN_LENGTH] = {0};
-                ecall_handle h_ecall;
-                printf("please input the PSAP test number:\n");
-                get_parameter_string(phone, sizeof(phone));
-
-                if (Ecall_Start(phone, &h_ecall) != SIMCOMDEMO_TRUE)
-                {
-                    printf("ecall %s failed\n", phone);
-                }
-                else
-                {
-                    printf("ecall %s successful, h_ecall %d\n", phone, h_ecall);
-                }
+                printf("ecall %s failed\n", phone);
             }
-            break;
-
-
-            case 2:
+            else
             {
-                char scan_string[MAX_SCAN_LENGTH] = {0};
-                ecall_handle h_ecall = 0;
-                printf("please enter ecall_handle:(greater than 0)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                h_ecall = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-                if (Ecall_End(h_ecall) != SIMCOMDEMO_TRUE)
-                {
-                    printf("end ecall_handle %d failed\n", h_ecall);
-                }
-                else
-                {
-                    printf("end ecall_handle %d successful\n", h_ecall);
-                }
+                printf("ecall %s successful, h_ecall %d\n", phone, h_ecall);
             }
-            break;
+        }
+        break;
 
-            case 3:
+        case 2:
+        {
+            char scan_string[MAX_SCAN_LENGTH] = {0};
+            ecall_handle h_ecall = 0;
+            printf("please enter ecall_handle:(greater than 0)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            h_ecall = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            if (Ecall_End(h_ecall) != SIMCOMDEMO_TRUE)
             {
-                ecall_msd_config_s_type msd_config;
-                char scan_string[MAX_SCAN_LENGTH] = {0};
-                printf("please input control info actType(0 or 1)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.actType = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-                printf("please input control info callType(0 or 1)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.callType = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-                printf("please input control info positionconfidence(0 or 1)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.positionconfidence = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input control info vehicleType(1-13)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.vehicleType = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input Isowmi_vin(0-9，A-H，J-N, P, R-Z less than 32)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                strncpy(msd_config.Isowmi_vin, scan_string,sizeof(msd_config.Isowmi_vin));
-
-                printf("please input Isovds_vin(0-9，A-H，J-N, P, R-Z less than 32)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                strncpy(msd_config.Isovds_vin, scan_string,sizeof(msd_config.Isovds_vin));
-
-                printf("please input isovisModelyear_vin(0-9，A-H，J-N, P, R-Z less than 32)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                strncpy(msd_config.isovisModelyear_vin, scan_string,sizeof(msd_config.isovisModelyear_vin));
-
-                printf("please input isovisSeqPlant_vin(0-9，A-H，J-N, P, R-Z less than 32)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                strncpy(msd_config.isovisSeqPlant_vin, scan_string,sizeof(msd_config.isovisSeqPlant_vin));
-
-                printf("please input gasolineTankPresent(0 or 1)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.gasolineTankPresent = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input dieselTankPresent(0 or 1)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.dieselTankPresent = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input compressedNaturalGas(0 or 1)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.compressedNaturalGas = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input liquidPropaneGas(0 or 1)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.liquidPropaneGas = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input electricEnergyStorage(0 or 1)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.electricEnergyStorage = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input hydrogenStorage(0 or 1)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.hydrogenStorage = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input otherStorage(0 or 1)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.otherStorage = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input Position_latitude(-324000000 to 324000000)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.Position_latitude = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input Position_longitude(-648000000 to 648000000)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.Position_longitude = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input vehicleDirection(0 to 255)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.vehicleDirection = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input VehicleLocationN1Delta(-512 to 511)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.VehicleLocationN1Delta = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input VehicleLocationN2Delta(-512 to 511)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.VehicleLocationN2Delta = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                printf("please input numberOfPassengers(0 to 255)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                msd_config.numberOfPassengers = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-
-                if (Ecall_updateMSD(&msd_config) != SIMCOMDEMO_TRUE)
-                {
-                    printf("updateMSD msd failed\n");
-                }
-                else
-                {
-                    printf("updateMSD msd successful\n");
-                }
+                printf("end ecall_handle %d failed\n", h_ecall);
             }
-            break;
-
-            case 4:
+            else
             {
-                char scan_string[MAX_SCAN_LENGTH] = {0};
-                ecall_handle h_ecall;
-                printf("please enter ecall_handle:(greater than 0)\n");
-                get_parameter_string(scan_string, sizeof(scan_string));
-                h_ecall = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
-
-                if (Ecall_pushMSD(h_ecall) != SIMCOMDEMO_TRUE)
-                {
-                    printf("push msd ecall_handle %d failed\n", h_ecall);
-                }
-                else
-                {
-                    printf("push msd ecall_handle %d successful\n", h_ecall);
-                }
+                printf("end ecall_handle %d successful\n", h_ecall);
             }
-            break;
+        }
+        break;
 
-			case 5:
+        case 3:
+        {
+            ecall_msd_config_s_type msd_config;
+            char scan_string[MAX_SCAN_LENGTH] = {0};
+            printf("please input control info actType(0 or 1)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.actType = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input control info callType(0 or 1)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.callType = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input control info positionconfidence(0 or 1)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.positionconfidence = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input control info vehicleType(1-13)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.vehicleType = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input Isowmi_vin(0-9，A-H，J-N, P, R-Z less than 32)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            strncpy(msd_config.Isowmi_vin, scan_string, sizeof(msd_config.Isowmi_vin));
+
+            printf("please input Isovds_vin(0-9，A-H，J-N, P, R-Z less than 32)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            strncpy(msd_config.Isovds_vin, scan_string, sizeof(msd_config.Isovds_vin));
+
+            printf("please input isovisModelyear_vin(0-9，A-H，J-N, P, R-Z less than 32)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            strncpy(msd_config.isovisModelyear_vin, scan_string, sizeof(msd_config.isovisModelyear_vin));
+
+            printf("please input isovisSeqPlant_vin(0-9，A-H，J-N, P, R-Z less than 32)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            strncpy(msd_config.isovisSeqPlant_vin, scan_string, sizeof(msd_config.isovisSeqPlant_vin));
+
+            printf("please input gasolineTankPresent(0 or 1)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.gasolineTankPresent = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input dieselTankPresent(0 or 1)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.dieselTankPresent = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input compressedNaturalGas(0 or 1)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.compressedNaturalGas = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input liquidPropaneGas(0 or 1)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.liquidPropaneGas = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input electricEnergyStorage(0 or 1)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.electricEnergyStorage = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input hydrogenStorage(0 or 1)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.hydrogenStorage = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input otherStorage(0 or 1)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.otherStorage = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input Position_latitude(-324000000 to 324000000)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.Position_latitude = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input Position_longitude(-648000000 to 648000000)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.Position_longitude = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input vehicleDirection(0 to 255)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.vehicleDirection = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input VehicleLocationN1Delta(-512 to 511)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.VehicleLocationN1Delta = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input VehicleLocationN2Delta(-512 to 511)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.VehicleLocationN2Delta = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            printf("please input numberOfPassengers(0 to 255)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            msd_config.numberOfPassengers = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            if (Ecall_updateMSD(&msd_config) != SIMCOMDEMO_TRUE)
             {
-                char phone[MAX_SCAN_LENGTH] = {0};
-                ecall_handle h_ecall;
-
-                if (Ecall_Start_Manually(&h_ecall) != SIMCOMDEMO_TRUE)
-                {
-                    printf("Manually initiated eCall failed\n");
-                }
-                else
-                {
-                    printf("Manually initiated eCall successful, h_ecall %d\n",h_ecall);
-                }
+                printf("updateMSD msd failed\n");
             }
-            break;
-
-			case 6:
+            else
             {
-                char phone[MAX_SCAN_LENGTH] = {0};
-                ecall_handle h_ecall;
-
-                if (Ecall_Start_Automatically(&h_ecall) != SIMCOMDEMO_TRUE)
-                {
-                    printf("Automatically initiated eCall failed\n");
-                }
-                else
-                {
-                    printf("Automatically initiated eCall successful, h_ecall %d\n",h_ecall);
-                }
+                printf("updateMSD msd successful\n");
             }
-            break;
+        }
+        break;
 
-            default:
+        case 4:
+        {
+            char scan_string[MAX_SCAN_LENGTH] = {0};
+            ecall_handle h_ecall;
+            printf("please enter ecall_handle:(greater than 0)\n");
+            get_parameter_string(scan_string, sizeof(scan_string));
+            h_ecall = simcom_atoi((const char *)scan_string, (unsigned int)strlen(scan_string));
+
+            if (Ecall_pushMSD(h_ecall) != SIMCOMDEMO_TRUE)
+            {
+                printf("push msd ecall_handle %d failed\n", h_ecall);
+            }
+            else
+            {
+                printf("push msd ecall_handle %d successful\n", h_ecall);
+            }
+        }
+        break;
+
+        case 5:
+        {
+            char phone[MAX_SCAN_LENGTH] = {0};
+            ecall_handle h_ecall;
+
+            if (Ecall_Start_Manually(&h_ecall) != SIMCOMDEMO_TRUE)
+            {
+                printf("Manually initiated eCall failed\n");
+            }
+            else
+            {
+                printf("Manually initiated eCall successful, h_ecall %d\n", h_ecall);
+            }
+        }
+        break;
+
+        case 6:
+        {
+            char phone[MAX_SCAN_LENGTH] = {0};
+            ecall_handle h_ecall;
+
+            if (Ecall_Start_Automatically(&h_ecall) != SIMCOMDEMO_TRUE)
+            {
+                printf("Automatically initiated eCall failed\n");
+            }
+            else
+            {
+                printf("Automatically initiated eCall successful, h_ecall %d\n", h_ecall);
+            }
+        }
+        break;
+
+        default:
             break;
         }
 
@@ -10015,7 +9957,6 @@ static void simcom_ecall_test()
             break;
         }
     }
-
 }
 #endif
 #endif /* SIMCOM_TEST_UI */
