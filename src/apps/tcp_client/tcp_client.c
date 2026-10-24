@@ -157,25 +157,20 @@ unsigned int push_data_send_to_buffer(unsigned char channel, void *pdat, unsigne
     unsigned int templen = 0;
     if (pdat && (datlen > 0) && (channel < 9) && (p_data_send_buffer != NULL))
     {
+        pthread_mutex_lock(&(channel_mutex[channel]));
         unsigned int old_len = data_send_len[channel];
         templen = datlen;
         if (templen > (EVERY_DATA_SEND_BUF_LEN - old_len))
         {
             templen = (EVERY_DATA_SEND_BUF_LEN - old_len);
         }
-
-        if (templen && (p_data_send_buffer != NULL))
+        if (templen)
         {
-
-            pthread_mutex_lock(&(channel_mutex[channel]));
             memmove((void *)((data_send_buffer[channel]) + old_len), (void *)pdat, templen);
             data_send_len[channel] += templen;
-            pthread_mutex_unlock(&(channel_mutex[channel]));
         }
-        else
-        {
-            DBG_Print(LEVEL2, "3push_data_send_to_buffer channel : %d\r\n", channel);
-        }
+        pthread_mutex_unlock(&(channel_mutex[channel]));
+
     }
     return templen;
 }
