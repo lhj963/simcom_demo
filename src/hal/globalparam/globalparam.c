@@ -815,13 +815,13 @@ void load_cfg_sysparam(void)
         sysparam_set_magic_flag(atoi(tempbuf));
     }
 
-    GetSubString(buf, "<vin:", ">", sysparam_get_vin(), 17);
+    GetSubString(buf, "<vin:", ">", sysparam_get_vin(), 17 + 1);
 
     // ip port
     for (i = 0; i < MAX_SVR_LINK; i++)
     {
         sprintf(tip, "<ip%u:", i);
-        GetSubString(buf, tip, ">", sysparam_get_serveraddr(i), MAX_SVR_ADDR_LEN);
+        GetSubString(buf, tip, ">", sysparam_get_serveraddr(i), MAX_SVR_ADDR_LEN + 1);
 
         sprintf(tip, "<port%u:", i);
         GetSubString(buf, tip, ">", tempbuf, sizeof(tempbuf));
@@ -833,13 +833,13 @@ void load_cfg_sysparam(void)
     for (i = 0; i < MAX_APN_CNT; i++)
     {
         sprintf(tip, "<apn%u:", i);
-        GetSubString(buf, tip, ">", sysparam_get_apn(i), MAX_APN_LEN);
+        GetSubString(buf, tip, ">", sysparam_get_apn(i), MAX_APN_LEN + 1);
 
         sprintf(tip, "<apnusr%u:", i);
-        GetSubString(buf, tip, ">", sysparam_get_apn_usr(i), MAX_APN_USR_LEN);
+        GetSubString(buf, tip, ">", sysparam_get_apn_usr(i), MAX_APN_USR_LEN + 1);
 
         sprintf(tip, "<apnpsw%u:", i);
-        GetSubString(buf, tip, ">", sysparam_get_apn_psw(i), MAX_APN_PSW_LEN);
+        GetSubString(buf, tip, ">", sysparam_get_apn_psw(i), MAX_APN_PSW_LEN + 1);
     }
 
     if (GetSubString(buf, "<func_select:", ">", tempbuf, sizeof(tempbuf)))

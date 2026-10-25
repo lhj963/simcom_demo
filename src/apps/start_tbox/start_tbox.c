@@ -419,24 +419,26 @@ void *test_car2car_thread(void *arg)
 	return 0;
 }
 #endif
-
+static uint32_t i_count = 0;
 void insert_uart_recv_thread(void)
 {
 	unsigned char t[6] = {0};
 	unsigned char *pt = 0;
 	static unsigned char s_last_s = 60;
 	static unsigned char s_init_uart = 0;
+	i_count++;
+	if (i_count < 4)
+		return;
+	i_count = 0;
 	get_time(t);
 	gpsutc_to_btc(&t[0], &t[1], &t[2], &t[3], &t[4], &t[5]);
 	set_rtc_time(t);
-
 	pt = get_rtc_time();
-
-	if (pt[5] != s_last_s)
+	if ((pt[5] != s_last_s) && (pt[5] % 10 == 0))
 	{
 		s_last_s = pt[5];
-
-		set_run_time(get_run_time() + 1);
+		printf("send_heartbeat_to_mcu %u %u %u!!! \n", pt[4], pt[5], i_count);
+		set_run_time(get_run_time() + 10);
 
 		if (s_init_uart == 0)
 		{
