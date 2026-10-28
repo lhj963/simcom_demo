@@ -1,4 +1,5 @@
 #include "two_cpu_com_protocol.h"
+#include <string.h>
 
 #define TCCP_START_FRAME "\xA5\x5A"
 #define TCCP_START_FRAME0 0xA5
@@ -20,6 +21,9 @@
 #define TCCP_GET_CONTENT_LEN(phead) ((*((unsigned char *)(phead) + TCCP_CONTENT_LEN_OFFSET) << 8) + *((unsigned char *)(phead) + TCCP_CONTENT_LEN_OFFSET + 1))
 #define TCCP_GET_CONTENT(phead) ((unsigned char *)(phead) + TCCP_CONTENT_OFFSET)
 #define TCCP_GET_PACK_LEN(phead) (TCCP_PACK_MIN_LEN + TCCP_GET_CONTENT_LEN(phead))
+
+/* UART reader assembles at most this many bytes. A declared length past it can never complete. */
+#define TCCP_MAX_RX_PACK (1024 * 20)
 
 typedef struct tagUnpackResult
 {
@@ -331,8 +335,29 @@ unsigned int tccp_unpack1(void *pdat, unsigned int len,
 		}
 
 		packlen = TCCP_GET_PACK_LEN(pHead);
-		if (templen < (packlen + (pHead - pTemp)))
+		if ((packlen < TCCP_PACK_MIN_LEN) || (packlen > TCCP_MAX_RX_PACK))
 		{
+			/* Declared length cannot fit the 20KB reader. Drop this sync word and resync. */
+			unsigned int skip = (unsigned int)(pHead - pTemp) + 1;
+
+			if (skip >= templen)
+			{
+				templen = 0;
+				break;
+			}
+			templen -= skip;
+			pTemp += skip;
+			continue;
+		}
+		if (templen < (packlen + (unsigned int)(pHead - pTemp)))
+		{
+			unsigned int prefix = (unsigned int)(pHead - pTemp);
+
+			if ((prefix > 0) && ((prefix + packlen) > TCCP_MAX_RX_PACK))
+			{
+				templen -= prefix;
+				pTemp = pHead;
+			}
 			break;
 		}
 		ret = tccp_unpackone(pHead, packlen, &unpack_ret);

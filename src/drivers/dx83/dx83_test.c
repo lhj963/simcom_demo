@@ -577,6 +577,59 @@ unsigned int sm4_enc1(unsigned char sm4_type, void *psrc, unsigned int srclen, v
 	return rlen;
 }
 
+unsigned int sm4_dec1(unsigned char sm4_type, void *psrc, unsigned int srclen, void *pOut, unsigned int outbuflen)
+{
+	SM4_Decrypt_func p_SM4_Decrypt_func = 0;
+	unsigned char rv = 1;
+	unsigned int templen = 0;
+	unsigned int offset = 0;
+	unsigned char tempbuf[240];
+
+	(void)sm4_type;
+	if ((psrc == 0) || (srclen == 0) || (pOut == 0) || (outbuflen < srclen) || (p_dx83 == 0))
+	{
+		return 0;
+	}
+	if ((srclen % 16) != 0)
+	{
+		return 0;
+	}
+	if (dx83_dll_handle == 0)
+	{
+		return 0;
+	}
+
+	p_SM4_Decrypt_func = dlsym(dx83_dll_handle, "SM4_Decrypt");
+	if (p_SM4_Decrypt_func == 0)
+	{
+		return 0;
+	}
+
+	while (srclen)
+	{
+		if (srclen >= 224)
+		{
+			templen = 224;
+		}
+		else
+		{
+			templen = srclen;
+		}
+
+		memcpy(tempbuf, (unsigned char *)psrc + offset, templen);
+		rv = p_SM4_Decrypt_func(p_dx83, tempbuf, (int)templen, (unsigned char *)pOut + offset);
+		if (rv)
+		{
+			return 0;
+		}
+
+		srclen -= templen;
+		offset += templen;
+	}
+
+	return offset;
+}
+
 int handshake_plat(void *pvin, void *ip, unsigned int port)
 {
 	int ret = 1;

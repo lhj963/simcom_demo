@@ -24,6 +24,31 @@ extern void gpsutc_to_btc(unsigned char *year,unsigned char *month,unsigned char
 
 extern void mywritefile(char create_way,void *full_path_file_name,void *ptr,unsigned int len);
 
+/* Write path via temp file, fsync, and rename. The previous file stays until the new one is durable. */
+extern int durable_write_file(const char *path, const void *data, unsigned int len);
+
+/* Run argv[0] with posix_spawnp (no shell). Returns the exit status, or -1. */
+extern int exec_argv_status(char *const argv[]);
+
+/*
+ * MCU remote command, argv only (never a shell).
+ * Returns 0 if a command ran. out_path is set for a successful wget -O to a fixed OTA path.
+ * Returns 2 if the command is an allowlisted restart (reboot / sync&&reboot) and has not
+ * been executed yet; *restart_with_sync is 1 when sync should run first. Call
+ * mcu_run_restart after acking the MCU.
+ * Returns -1 if the payload is not on the allowlist.
+ * ack receives captured stdout for diagnostic commands.
+ */
+extern int mcu_exec_allowlisted_cmd(const void *payload, unsigned int len,
+									const char **out_path, char *url_out, unsigned int url_out_len,
+									char *ack, unsigned int ack_cap, unsigned int *ack_len,
+									int *restart_with_sync);
+
+extern void mcu_run_restart(int with_sync);
+
+/* FTP GET via wget argv. Credentials are separate arguments, never a shell string. */
+extern int safe_ftp_get(const char *url, const char *user, const char *pass, const char *outfile);
+
 extern unsigned int myreadfile1(void *filename,unsigned int offset,void *pbuf,unsigned int buflen);
 
 extern unsigned int myreadfile(void *filename,void *pbuf,unsigned int buflen);

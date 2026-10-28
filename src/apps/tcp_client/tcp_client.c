@@ -15,6 +15,8 @@
 #include <sys/syslog.h>
 #include <sys/poll.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
+#include <pthread.h>
 #include <linux/input.h>
 
 unsigned long s_tcp_send_total_bytes = 0;
@@ -360,10 +362,138 @@ void reg_net_data_arrive_callback(void (*func)(unsigned char channel, void *pdat
 int s_socketfd[9] = {0};
 unsigned int connect_time_threshold[9] = {0};
 
+static pthread_mutex_t s_sock_mu[9] = {
+	PTHREAD_MUTEX_INITIALIZER,
+	PTHREAD_MUTEX_INITIALIZER,
+	PTHREAD_MUTEX_INITIALIZER,
+	PTHREAD_MUTEX_INITIALIZER,
+	PTHREAD_MUTEX_INITIALIZER,
+	PTHREAD_MUTEX_INITIALIZER,
+	PTHREAD_MUTEX_INITIALIZER,
+	PTHREAD_MUTEX_INITIALIZER,
+	PTHREAD_MUTEX_INITIALIZER};
+
+static int sock_get(unsigned char channel)
+{
+	int fd;
+
+	if (channel >= 9)
+	{
+		return -1;
+	}
+	pthread_mutex_lock(&s_sock_mu[channel]);
+	fd = s_socketfd[channel];
+	pthread_mutex_unlock(&s_sock_mu[channel]);
+	return fd;
+}
+
+/* Caller owns the returned dup and must close it. *orig is the slot fd, used to close only that connection. */
+static int sock_snapshot(unsigned char channel, int *orig)
+{
+	int fd = -1;
+
+	if (orig)
+	{
+		*orig = -1;
+	}
+	if (channel >= 9)
+	{
+		return -1;
+	}
+	pthread_mutex_lock(&s_sock_mu[channel]);
+	if (s_socketfd[channel] > 0)
+	{
+		if (orig)
+		{
+			*orig = s_socketfd[channel];
+		}
+		fd = dup(s_socketfd[channel]);
+	}
+	pthread_mutex_unlock(&s_sock_mu[channel]);
+	return fd;
+}
+
+static void sock_close_fd(int fd)
+{
+	if (fd > 0)
+	{
+		shutdown(fd, SHUT_RDWR);
+		close(fd);
+	}
+}
+
+static void sock_close(unsigned char channel)
+{
+	int fd = -1;
+
+	if (channel >= 9)
+	{
+		return;
+	}
+	pthread_mutex_lock(&s_sock_mu[channel]);
+	fd = s_socketfd[channel];
+	s_socketfd[channel] = -1;
+	pthread_mutex_unlock(&s_sock_mu[channel]);
+	sock_close_fd(fd);
+}
+
+/* Returns 1 when this call removed watched from the slot. A newer fd is left alone. */
+static int sock_close_if_same(unsigned char channel, int watched)
+{
+	int fd = -1;
+
+	if ((channel >= 9) || (watched <= 0))
+	{
+		return 0;
+	}
+	pthread_mutex_lock(&s_sock_mu[channel]);
+	if (s_socketfd[channel] == watched)
+	{
+		fd = s_socketfd[channel];
+		s_socketfd[channel] = -1;
+	}
+	pthread_mutex_unlock(&s_sock_mu[channel]);
+	sock_close_fd(fd);
+	return fd > 0;
+}
+
+static void sock_drop_for_server_change(unsigned char channel)
+{
+	if ((channel < 9) && get_server_change_flag(channel))
+	{
+		sock_close(channel);
+		set_server_connect_status(channel, 0);
+	}
+}
+
+static void sock_store(unsigned char channel, int newfd)
+{
+	int old = -1;
+	int stored = (newfd > 0) ? newfd : -1;
+
+	if (channel >= 9)
+	{
+		if (newfd > 0)
+		{
+			close(newfd);
+		}
+		return;
+	}
+	pthread_mutex_lock(&s_sock_mu[channel]);
+	old = s_socketfd[channel];
+	s_socketfd[channel] = stored;
+	pthread_mutex_unlock(&s_sock_mu[channel]);
+	if ((old > 0) && (old != stored))
+	{
+		sock_close_fd(old);
+	}
+}
+
 void *tcp_connect_thread(void *parg)
 {
     unsigned char channel = 0;
     unsigned long last_connect_tcp_time[9] = {0};
+    unsigned char force_redial[9] = {0};
     unsigned char *pt = get_rtc_time();
     ftp_init(ls_poc_create_tcp_connect, (int (*)(int, void *, unsigned int))write, read, bind_port_and_listen, myaccept);
     while (1)
@@ -376,26 +506,31 @@ void *tcp_connect_thread(void *parg)
                 if (get_server_change_flag(channel))
                 {
                     DBG_Print(LEVEL0, "server change flag connect:[%d],time:%u\n", channel, (unsigned int)get_run_time());
-                    if (s_socketfd[channel] > 0)
-                    {
-                        close(s_socketfd[channel]);
-                    }
-                    s_socketfd[channel] = -1;
+                    sock_close(channel);
                     set_server_change_flag(channel, 0);
                     set_server_connect_status(channel, 0);
+                    connect_time_threshold[channel] = 0;
+                    force_redial[channel] = 1;
                     send_offline_msg_to_mcu(channel);
                 }
 
-                if (sysparam_get_serverport(channel) && (s_socketfd[channel] <= 0) && (((channel == 7) && get_wifi_client_status()) || (channel != 7)))
+                if (sysparam_get_serverport(channel) && (sock_get(channel) <= 0) && (((channel == 7) && get_wifi_client_status()) || (channel != 7)))
                 {
+                    int fd;
+
                     set_server_connect_status(channel, 0);
-                    if ((get_run_time() - last_connect_tcp_time[channel]) >= connect_time_threshold[channel])
+                    if (force_redial[channel] || ((get_run_time() - last_connect_tcp_time[channel]) >= connect_time_threshold[channel]))
                     {
-                        sleep(2);
+                        if (force_redial[channel] == 0)
+                        {
+                            sleep(2);
+                        }
+                        force_redial[channel] = 0;
                         last_connect_tcp_time[channel] = get_run_time();
-                        s_socketfd[channel] = ls_poc_create_tcp_connect(sysparam_get_serveraddr(channel), sysparam_get_serverport(channel));
-                        DBG_Print(LEVEL0, "end connect[%d][socket:%d],time:%u\n", channel, s_socketfd[channel], (unsigned int)get_run_time());
-                        if (s_socketfd[channel] > 0)
+                        fd = ls_poc_create_tcp_connect(sysparam_get_serveraddr(channel), sysparam_get_serverport(channel));
+                        sock_store(channel, fd);
+                        DBG_Print(LEVEL0, "end connect[%d][socket:%d],time:%u\n", channel, sock_get(channel), (unsigned int)get_run_time());
+                        if (sock_get(channel) > 0)
                         {
                             set_server_connect_status(channel, 1);
                             send_online_msg_to_mcu(channel);
@@ -423,6 +558,7 @@ void *tcp_connect_special_thread(void *parg)
 {
     unsigned char channel = 0;
     unsigned long last_connect_tcp_time[9] = {0};
+    unsigned char force_redial[9] = {0};
     while (1)
     {
         if (get_ppp_status(0))
@@ -432,24 +568,29 @@ void *tcp_connect_special_thread(void *parg)
             {
                 if (get_server_change_flag(channel))
                 {
-                    if (s_socketfd[channel] > 0)
-                    {
-                        close(s_socketfd[channel]);
-                    }
-                    s_socketfd[channel] = -1;
+                    sock_close(channel);
                     set_server_change_flag(channel, 0);
                     set_server_connect_status(channel, 0);
+                    connect_time_threshold[channel] = 0;
+                    force_redial[channel] = 1;
                 }
 
-                if (sysparam_get_serverport(channel) && (s_socketfd[channel] <= 0) && (((channel == 7) && get_wifi_client_status()) || (channel != 7)))
+                if (sysparam_get_serverport(channel) && (sock_get(channel) <= 0) && (((channel == 7) && get_wifi_client_status()) || (channel != 7)))
                 {
+                    int fd;
+
                     set_server_connect_status(channel, 0);
-                    if ((get_run_time() - last_connect_tcp_time[channel]) >= connect_time_threshold[channel])
+                    if (force_redial[channel] || ((get_run_time() - last_connect_tcp_time[channel]) >= connect_time_threshold[channel]))
                     {
-                        sleep(2);
+                        if (force_redial[channel] == 0)
+                        {
+                            sleep(2);
+                        }
+                        force_redial[channel] = 0;
                         last_connect_tcp_time[channel] = get_run_time();
-                        s_socketfd[channel] = ls_poc_create_tcp_connect(sysparam_get_serveraddr(channel), sysparam_get_serverport(channel));
-                        if (s_socketfd[channel] > 0)
+                        fd = ls_poc_create_tcp_connect(sysparam_get_serveraddr(channel), sysparam_get_serverport(channel));
+                        sock_store(channel, fd);
+                        if (sock_get(channel) > 0)
                         {
                             DBG_Print(LEVEL3, "channel : %d connect success!!!\r\n", channel);
                         }
@@ -498,62 +639,77 @@ void *tcp_send_thread(void *parg)
                 {
                     s_online_time[channel] = 0;
                 }
-                if (get_server_connect_status(channel) && (s_socketfd[channel] > 0) && (get_ppp_status(0) > 0) && (get_dbm() > -90))
+                sock_drop_for_server_change(channel);
                 {
-                    if (get_data_send_len(channel))
+                    int io_fd = -1;
+                    int orig_fd = -1;
+
+                    io_fd = sock_snapshot(channel, &orig_fd);
+                    if (get_server_connect_status(channel) && (io_fd > 0) && (get_ppp_status(0) > 0) && (get_dbm() > -90))
                     {
-                        pthread_mutex_lock(&(channel_mutex[channel]));
-                        if (get_data_send_len(channel) > 0)
+                        if (get_data_send_len(channel))
                         {
-                            send_length = get_data_send_len(channel);
-                            memmove(p_send_buffer, get_data_send_ptr(channel), send_length);
-                            data_send_len_clr(channel);
-                        }
-                        pthread_mutex_unlock(&(channel_mutex[channel]));
-                        if (write(s_socketfd[channel], p_send_buffer, send_length) != (int)send_length)
-                        {
-                            set_server_connect_status(channel, 0);
-                            close(s_socketfd[channel]);
-                            s_socketfd[channel] = -1;
-                            send_offline_msg_to_mcu(channel);
+                            send_length = 0;
+                            pthread_mutex_lock(&(channel_mutex[channel]));
+                            if (get_data_send_len(channel) > 0)
+                            {
+                                send_length = get_data_send_len(channel);
+                                memmove(p_send_buffer, get_data_send_ptr(channel), send_length);
+                                data_send_len_clr(channel);
+                            }
+                            pthread_mutex_unlock(&(channel_mutex[channel]));
+                            if ((send_length > 0) && (write(io_fd, p_send_buffer, send_length) != (int)send_length))
+                            {
+                                if (sock_close_if_same(channel, orig_fd))
+                                {
+                                    set_server_connect_status(channel, 0);
+                                    send_offline_msg_to_mcu(channel);
+                                }
 
-                            DBG_Print(LEVEL0, "server_connect_status disconnect channel[%d]", channel);
+                                DBG_Print(LEVEL0, "server_connect_status disconnect channel[%d]", channel);
 
-                            if (channel != 4)
-                                create_blind_file(channel, p_send_buffer, send_length);
+                                if (channel != 4)
+                                    create_blind_file(channel, p_send_buffer, send_length);
+                            }
+                            else if (send_length > 0)
+                            {
+                                record_net_log(channel, "发送", p_send_buffer, send_length);
+                                s_tcp_send_total_bytes += send_length;
+                            }
                         }
                         else
                         {
-                            record_net_log(channel, "发送", p_send_buffer, send_length);
-                            s_tcp_send_total_bytes += send_length;
-                        }
-                    }
-                    else
-                    {
-                        if ((channel == 4) || (channel == 6)) // dst link and sddf link
-                        {
-                            if (s_online_time[channel] >= 4)
+                            if ((channel == 4) || (channel == 6)) // dst link and sddf link
                             {
-                                blind_proc(channel, s_socketfd[channel]);
+                                if (s_online_time[channel] >= 4)
+                                {
+                                    blind_proc(channel, io_fd);
+                                    if (get_server_connect_status(channel) == 0)
+                                    {
+                                        if (sock_close_if_same(channel, orig_fd))
+                                        {
+                                            send_offline_msg_to_mcu(channel);
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                blind_proc(channel, io_fd);
                                 if (get_server_connect_status(channel) == 0)
                                 {
-                                    close(s_socketfd[channel]);
-                                    s_socketfd[channel] = -1;
-                                    send_offline_msg_to_mcu(channel);
+                                    DBG_Print(LEVEL0, "blind proc disconnect channel[%d]", channel);
+                                    if (sock_close_if_same(channel, orig_fd))
+                                    {
+                                        send_offline_msg_to_mcu(channel);
+                                    }
                                 }
                             }
                         }
-                        else
-                        {
-                            blind_proc(channel, s_socketfd[channel]);
-                            if (get_server_connect_status(channel) == 0)
-                            {
-                                DBG_Print(LEVEL0, "blind proc disconnect channel[%d]", channel);
-                                close(s_socketfd[channel]);
-                                s_socketfd[channel] = -1;
-                                send_offline_msg_to_mcu(channel);
-                            }
-                        }
+                    }
+                    if (io_fd > 0)
+                    {
+                        close(io_fd);
                     }
                 }
 
@@ -602,11 +758,21 @@ void *tcp_recv_thread(void *parg)
     }
     while (1)
     {
+        int snap[9];
+        int orig[9];
+
         for (channel = 0; channel < max_index; channel++)
         {
-            if (get_server_connect_status(channel) && (s_socketfd[channel] > 0)) // connect ok
+            snap[channel] = -1;
+            orig[channel] = -1;
+            sock_drop_for_server_change(channel);
+            if (get_server_connect_status(channel))
             {
-                port_pollfd[channel].fd = s_socketfd[channel];
+                snap[channel] = sock_snapshot(channel, &orig[channel]);
+            }
+            if (snap[channel] > 0) // connect ok
+            {
+                port_pollfd[channel].fd = snap[channel];
                 port_pollfd[channel].events = POLLIN;
                 port_pollfd[channel].revents = 0;
             }
@@ -621,6 +787,14 @@ void *tcp_recv_thread(void *parg)
 
             for (channel = 0; channel < max_index; ++channel)
             {
+                int dead = 0;
+
+                if (get_server_change_flag(channel))
+                {
+                    sock_close(channel);
+                    set_server_connect_status(channel, 0);
+                    continue;
+                }
                 if (port_pollfd[channel].fd == -1)
                 {
                     continue;
@@ -630,7 +804,7 @@ void *tcp_recv_thread(void *parg)
                 {
                     // data arrive
                     memset(s_buff, 0, sizeof(s_buff));
-                    ret = read(s_socketfd[channel], s_buff, TCP_THREAD_RECV_BUF_LEN);
+                    ret = read(snap[channel], s_buff, TCP_THREAD_RECV_BUF_LEN);
                     if (ret > 0)
                     {
                         record_net_log(channel, "recv", s_buff, ret);
@@ -641,26 +815,33 @@ void *tcp_recv_thread(void *parg)
                     }
                     else
                     {
-                        DBG_Print(LEVEL0, "tcp_recv_thread read date from server ERROR  ret=%d \r\n", ret);
-                        if (ret == 0)
-                        {
-                            kick_cnt[channel]++;
-                            if (kick_cnt[channel] >= 7)
-                            {
-                                kick_cnt[channel] = 0;
-                                connect_time_threshold[channel] = 30;
-                            }
-                        }
-                        else
+                        dead = 1;
+                    }
+                }
+                else if (port_pollfd[channel].revents & (POLLERR | POLLHUP | POLLNVAL))
+                {
+                    dead = 1;
+                    ret = -1;
+                }
+                if (dead && sock_close_if_same(channel, orig[channel]))
+                {
+                    DBG_Print(LEVEL0, "tcp_recv_thread read date from server ERROR  ret=%d \r\n", ret);
+                    if (ret == 0)
+                    {
+                        kick_cnt[channel]++;
+                        if (kick_cnt[channel] >= 7)
                         {
                             kick_cnt[channel] = 0;
-                            connect_time_threshold[channel] = 0;
+                            connect_time_threshold[channel] = 30;
                         }
-                        close(s_socketfd[channel]);
-                        s_socketfd[channel] = -1;
-                        set_server_connect_status(channel, 0);
-                        send_offline_msg_to_mcu(channel);
                     }
+                    else
+                    {
+                        kick_cnt[channel] = 0;
+                        connect_time_threshold[channel] = 0;
+                    }
+                    set_server_connect_status(channel, 0);
+                    send_offline_msg_to_mcu(channel);
                 }
             }
         }
@@ -675,6 +856,13 @@ void *tcp_recv_thread(void *parg)
             {
                 DBG_PrintEx(LEVEL1, "/data/error.txt", "tcp select error\r\n", strlen("tcp select error\r\n"));
                 s_select_flag = 1;
+            }
+        }
+        for (channel = 0; channel < max_index; channel++)
+        {
+            if (snap[channel] > 0)
+            {
+                close(snap[channel]);
             }
         }
     }

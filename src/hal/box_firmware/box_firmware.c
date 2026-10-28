@@ -1,4 +1,11 @@
 #include "box_firmware.h"
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string.h>
+
+extern int durable_write_file(const char *path, const void *data, unsigned int len);
 
 #if 0
 �̼���ʽ����:
@@ -262,6 +269,11 @@ int box_firmware_unpack(void *pdat,unsigned int datlen,
 
 	xlen = 8;			//head 8Bytes
 
+	if ((xlen + 4 + 4 + 4 + 4 + 4 + 4 + 1) > datlen)
+	{
+		return 6;
+	}
+
 	xlen += 4;
 
 	mcu_end_offset += (ptr[xlen++] << 24);
@@ -289,19 +301,22 @@ int box_firmware_unpack(void *pdat,unsigned int datlen,
 	cfg_end_offset += (ptr[xlen++] << 8);
 	cfg_end_offset += ptr[xlen++];
 
+	if (xlen >= datlen)
+	{
+		return 6;
+	}
 	libcnt = ptr[xlen++];
 	p_lib_info = ptr + xlen;
 	for (i = 0; i < libcnt; i++)
 	{
-		fn_len = ptr[xlen++];
-		memset(fn,0,sizeof(fn));
-		if (fn_len >= 64)
+		if (xlen >= datlen)
 		{
-			memcpy(fn,ptr + xlen,64);
+			return 6;
 		}
-		else
+		fn_len = ptr[xlen++];
+		if ((fn_len == 0) || (fn_len > 64) || ((xlen + fn_len + 8) > datlen))
 		{
-			memcpy(fn,ptr + xlen,fn_len);
+			return 4;
 		}
 		xlen += fn_len;
 
@@ -348,20 +363,18 @@ int box_firmware_unpack(void *pdat,unsigned int datlen,
 		lib_start_offset = 0;
 		lib_end_offset = 0;
 
+		if ((pfiledata < p_lib_info) || ((unsigned int)(pfiledata - p_lib_info) < (libidx + 1 + 8)))
+		{
+			return 6;
+		}
 		fn_len = p_lib_info[libidx++];
-		if (fn_len == 0)
+		if ((fn_len == 0) || (fn_len > 64) ||
+			((unsigned int)(pfiledata - p_lib_info) < (libidx + fn_len + 8)))
 		{
 			return 4;
 		}
 		memset(fn,0,sizeof(fn));
-		if (fn_len >= 64)
-		{
-			memcpy(fn,p_lib_info + libidx,64);
-		}
-		else
-		{
-			memcpy(fn,p_lib_info + libidx,fn_len);
-		}
+		memcpy(fn,p_lib_info + libidx,fn_len);
 		libidx += fn_len;
 
 		//lib star offset
@@ -387,6 +400,61 @@ int box_firmware_unpack(void *pdat,unsigned int datlen,
 }
 
 
+
+static int box_lib_name_ok(const char *name)
+{
+	size_t i;
+	size_t n;
+
+	if (name == 0)
+	{
+		return 0;
+	}
+	n = strlen(name);
+	if ((n == 0) || (n > 64) || (name[0] == '.') || (strstr(name, "..") != 0))
+	{
+		return 0;
+	}
+	for (i = 0; i < n; i++)
+	{
+		unsigned char c = (unsigned char)name[i];
+
+		if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+			  c == '.' || c == '_' || c == '-' || c == '+'))
+		{
+			return 0;
+		}
+	}
+	return 1;
+}
+
+int box_install_library(const char *filename, const void *data, unsigned int len)
+{
+	char path[96];
+	struct stat st;
+
+	if ((box_lib_name_ok(filename) == 0) || (data == 0) || (len == 0))
+	{
+		return -1;
+	}
+	if (snprintf(path, sizeof(path), "/usr/lib/%s", filename) >= (int)sizeof(path))
+	{
+		return -1;
+	}
+	if (lstat(path, &st) == 0)
+	{
+		if (S_ISDIR(st.st_mode))
+		{
+			return -1;
+		}
+		/* unlink does not follow a symlink, so this cannot delete outside /usr/lib. */
+		if (unlink(path) != 0)
+		{
+			return -1;
+		}
+	}
+	return durable_write_file(path, data, len);
+}
 
 void test_pack_firmware(void)
 {

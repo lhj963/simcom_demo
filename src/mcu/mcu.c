@@ -302,23 +302,15 @@ void mpu_firmware_proc(void *pdat, unsigned int datlen)
 
 void cfg_firmware_proc(void *pdat, unsigned int datlen)
 {
-	system("rm -rf /data/sysparam.cfg");
-	DBG_SendDataEx("/data/sysparam.cfg", pdat, datlen);
+	if (pdat && datlen)
+	{
+		mywritefile(0, "/data/sysparam.cfg", pdat, datlen);
+	}
 }
 
 void lib_firmware_proc(void *filename, void *pdat, unsigned int datlen)
 {
-	char fn[96] = {0};
-	char cmd[128] = {0};
-
-	if (filename)
-	{
-		sprintf(fn, "/usr/lib/%s", (char *)filename);
-
-		snprintf(cmd, sizeof(cmd) - 1, "rm -rf %s", fn);
-		system(cmd);
-		DBG_SendDataEx(fn, pdat, datlen);
-	}
+	box_install_library((const char *)filename, pdat, datlen);
 }
 
 void update_box_firmware(void)
@@ -1089,7 +1081,6 @@ void analyze_mcu_data(unsigned int msgid, void *content, unsigned int contentlen
 	case TCCP_MCU_TO_MPU_EXE_LINUX_CMD_MSG_ID:
 		if (ptr && contentlen && (contentlen <= 384))
 		{
-			FILE *fp;
 			unsigned char update_mcu_flag = 0;
 			unsigned char update_mpu_flag = 0;
 			unsigned char update_box_flag = 0;
@@ -1098,73 +1089,63 @@ void analyze_mcu_data(unsigned int msgid, void *content, unsigned int contentlen
 			unsigned char update_sandian_bms_flag = 0;
 
 			unsigned int rlen = 0;
-			// unsigned char retcmd[1024 + 1] = {0};
-			unsigned char *retcmd = 0;
 			char cmd[384 + 1] = {0};
+			char url[384 + 1] = {0};
+			char tip[64] = {0};
+			char ack[1024 + 1] = {0};
+			unsigned int ack_len = 0;
+			int restart_sync = 0;
+			int cmd_rc = 0;
+			const char *out_path = 0;
 
-			retcmd = (unsigned char *)malloc(1024 + 16);
-			if (retcmd)
+			/*
+			 * MCU framing is only a header plus XOR. Never pass that payload to a shell.
+			 * Allow reboot/sync, a fixed diagnostic set, and wget -O to known OTA paths.
+			 */
+			cmd_rc = mcu_exec_allowlisted_cmd(ptr, contentlen, &out_path, url, sizeof(url), ack, sizeof(ack), &ack_len, &restart_sync);
+			if (cmd_rc == 2)
 			{
-				memcpy(cmd, ptr, contentlen);
-				fp = popen(cmd, "r");
-				if (fp)
+				rlen = snprintf(tip, sizeof(tip), "execute ok\r\n");
+				mpu_ack_mcu(TCCP_MCU_TO_MPU_EXE_LINUX_CMD_MSG_ID, tip, rlen);
+				mcu_run_restart(restart_sync);
+			}
+			else if (cmd_rc == 0)
+			{
+				if (ack_len == 0)
 				{
-					rlen = fread(retcmd, 1, 1024, fp);
-					pclose(fp);
-					if (rlen)
-					{
-						// printf("cmd ack(%uBytes):",rlen);
-						mpu_ack_mcu(TCCP_MCU_TO_MPU_EXE_LINUX_CMD_MSG_ID, retcmd, rlen);
-					}
-					else
-					{
-						rlen = sprintf((char *)retcmd, "(%s)execute ok", cmd);
-						mpu_ack_mcu(TCCP_MCU_TO_MPU_EXE_LINUX_CMD_MSG_ID, retcmd, rlen);
-					}
-
-					// update mcu
-					if (strstr(cmd, "wget") && strstr(cmd, "-O") && strstr(cmd, "/data/mcu.bin"))
-					{
-						update_mcu_flag = 1;
-					}
-
-					// update mpu
-					if (strstr(cmd, "wget") && strstr(cmd, "-O") && strstr(cmd, "/data/mpu.bin"))
-					{
-						if (is_cmd_mpu_ver_ok(cmd))
-						{
-							update_mpu_flag = 1;
-						}
-					}
-
-					// update all firmware
-					if (strstr(cmd, "wget") && strstr(cmd, "-O") && strstr(cmd, "/data/box.bin"))
-					{
-						if (is_cmd_mpu_ver_ok(cmd))
-						{
-							update_box_flag = 1;
-						}
-					}
-
-					// update sandian_mcu
-					if (strstr(cmd, "wget") && strstr(cmd, "-O") && strstr(cmd, "/data/sandian_mcu.zip"))
-					{
-						update_sandian_mcu_flag = 1;
-					}
-
-					// update sandian_vcu
-					if (strstr(cmd, "wget") && strstr(cmd, "-O") && strstr(cmd, "/data/sandian_vcu.zip"))
-					{
-						update_sandian_vcu_flag = 1;
-					}
-					// update sandian_bms
-					if (strstr(cmd, "wget") && strstr(cmd, "-O") && strstr(cmd, "/data/sandian_bms.zip"))
-					{
-						update_sandian_bms_flag = 1;
-					}
+					ack_len = snprintf(ack, sizeof(ack), "execute ok\r\n");
 				}
+				mpu_ack_mcu(TCCP_MCU_TO_MPU_EXE_LINUX_CMD_MSG_ID, ack, ack_len);
 
-				free(retcmd);
+				if (out_path && (strcmp(out_path, "/data/mcu.bin") == 0))
+				{
+					update_mcu_flag = 1;
+				}
+				if (out_path && (strcmp(out_path, "/data/mpu.bin") == 0) && is_cmd_mpu_ver_ok(url))
+				{
+					update_mpu_flag = 1;
+				}
+				if (out_path && (strcmp(out_path, "/data/box.bin") == 0) && is_cmd_mpu_ver_ok(url))
+				{
+					update_box_flag = 1;
+				}
+				if (out_path && (strcmp(out_path, "/data/sandian_mcu.zip") == 0))
+				{
+					update_sandian_mcu_flag = 1;
+				}
+				if (out_path && (strcmp(out_path, "/data/sandian_vcu.zip") == 0))
+				{
+					update_sandian_vcu_flag = 1;
+				}
+				if (out_path && (strcmp(out_path, "/data/sandian_bms.zip") == 0))
+				{
+					update_sandian_bms_flag = 1;
+				}
+			}
+			else
+			{
+				rlen = snprintf(tip, sizeof(tip), "execute rejected\r\n");
+				mpu_ack_mcu(TCCP_MCU_TO_MPU_EXE_LINUX_CMD_MSG_ID, tip, rlen);
 			}
 
 			if (update_mcu_flag)

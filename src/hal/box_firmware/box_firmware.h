@@ -24,6 +24,9 @@ extern int box_firmware_unpack(void *pdat,unsigned int datlen,
 
 extern void test_pack_firmware(void);
 
+/* Install one library under /usr/lib. Rejects names that are not a single path component. */
+extern int box_install_library(const char *filename, const void *data, unsigned int len);
+
 
 #ifdef __cplusplus
 }

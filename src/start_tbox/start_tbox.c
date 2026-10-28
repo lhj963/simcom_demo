@@ -1,4 +1,7 @@
 #include "start_tbox.h"
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 void check_can_file(void *filename, void *p_user_arg)
 {
@@ -962,18 +965,14 @@ int _load_param_func(void *full_path_filename, void *sysparam, unsigned int sysp
 
 int _save_param_func(void *full_path_filename, void *sysparam, unsigned int sysparamlen)
 {
-	FILE *fp;
-
 	if ((full_path_filename == 0) || (sysparam == 0) || (sysparamlen == 0))
 	{
 		return 2;
 	}
 
-	fp = fopen(full_path_filename, "wb+");
-	if (fp)
+	if (durable_write_file((const char *)full_path_filename, sysparam, sysparamlen) != 0)
 	{
-		fwrite(sysparam, sysparamlen, 1, fp);
-		fclose(fp);
+		return 1;
 	}
 	return 0;
 }
@@ -1073,41 +1072,52 @@ unsigned int jmrh_jiami(void *psrc, unsigned int srclen, void *pOut, unsigned in
 
 void jmrh_ota_cb(OTAParam *p)
 {
-	char *cmd = 0;
+	char head[256];
+	int rc;
 
-	cmd = (char *)malloc(512);
-	if (cmd)
+	if ((p == 0) || (p->url == 0) || (strncmp(p->url, "ftp://", 6) != 0))
 	{
-		sprintf(cmd, "[jmrh ota]url:%s usr:%s psw:%s\r\n", p->url, p->usr, p->psw);
-		save_log(cmd, 0, 0);
+		return;
+	}
 
-		// system("wget -O /data/test_ota.zip ftp://users:123456@222.128.13.25:8121/1476393798278971392_1478673173863071744.zip");
-		snprintf(cmd, 511, "wget -O /data/test_ota.zip ftp://%s:%s@%s", p->usr, p->psw, p->url + strlen("ftp://"));
-		printf("exe cmd:%s(runtime:%u)\r\n", cmd, (unsigned int)(get_run_time()));
-		system(cmd);
-		free(cmd);
-		printf("exe wget cmd finish(runtime:%u)\r\n", (unsigned int)(get_run_time()));
+	save_log("[jmrh ota] download\r\n", 0, 0);
+	rc = safe_ftp_get(p->url, p->usr ? p->usr : "", p->psw ? p->psw : "", "/data/test_ota.zip.partial");
+	printf("exe wget finish rc:%d runtime:%u\r\n", rc, (unsigned int)(get_run_time()));
+	if (rc != 0)
+	{
+		unlink("/data/test_ota.zip.partial");
+		save_log("升级文件下载失败", 0, 0);
+		return;
+	}
+	if (rename("/data/test_ota.zip.partial", "/data/test_ota.zip") != 0)
+	{
+		unlink("/data/test_ota.zip.partial");
+		save_log("升级文件下载失败", 0, 0);
+		return;
+	}
 
-		save_log("升级文件下载完成", 0, 0);
-		if (unpack_ota_file("/data/test_ota.zip", "/data/mcu.bin") == 0)
+	save_log("升级文件下载完成", 0, 0);
+	if (unpack_ota_file("/data/test_ota.zip", "/data/mcu.bin") == 0)
+	{
+		save_log("验签:true\r\n原始升级包的HASH=HASH\r\n", 0, 0);
+
+		memset(head, 0, sizeof(head));
+		myreadfile("/data/mcu.bin", head, sizeof(head) - 1);
+		if (memcmp(head, "BYSD_BOX", strlen("BYSD_BOX")) == 0)
 		{
-			save_log("验签:true\r\n原始升级包的HASH=HASH\r\n", 0, 0);
-
-			myreadfile("/data/mcu.bin", cmd, 256);
-			if (memcmp(cmd, "BYSD_BOX", strlen("BYSD_BOX")) == 0)
+			if (rename("/data/mcu.bin", "/data/box.bin") == 0)
 			{
-				system("mv /data/mcu.bin /data/box.bin");
 				update_box_firmware();
-			}
-			else
-			{
-				send_start_mcu_update_msg();
 			}
 		}
 		else
 		{
-			save_log("验签:false\r\n", 0, 0);
+			send_start_mcu_update_msg();
 		}
+	}
+	else
+	{
+		save_log("验签:false\r\n", 0, 0);
 	}
 }
 

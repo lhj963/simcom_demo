@@ -1,4 +1,8 @@
 #include "jmrh_pro.h"
+#include <string.h>
+
+extern unsigned int sm4_dec1(unsigned char sm4_type, void *psrc, unsigned int srclen, void *pOut, unsigned int outbuflen);
+extern void *_find_sub_str(void *pbuf, unsigned int ulBufLen, void *SubStr, unsigned int ulSubStrLen);
 
 
 typedef struct tagJMRH_PROStruction
@@ -95,7 +99,108 @@ void reg_jmrh_ota_cb_func(void (*pf)(OTAParam *))
     jmrh_ota_cb_func = pf;
 }
 
-void jmrh_analyze_plat_data(void *pdat,unsigned int len)
+static int jmrh_plain_token_ok(const unsigned char *s, unsigned int n, int is_url)
+{
+    unsigned int i;
+
+    if (is_url)
+    {
+        if ((n < 6) || (n >= 256))
+        {
+            return 0;
+        }
+        if (memcmp(s, "ftp://", 6) != 0)
+        {
+            return 0;
+        }
+    }
+    else if (n >= 128)
+    {
+        return 0;
+    }
+
+    for (i = 0; i < n; i++)
+    {
+        unsigned char c = s[i];
+        int ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+                 c == '.' || c == '_' || c == '-' || c == '+' || c == '@' || c == '%' || c == '#';
+
+        if (is_url)
+        {
+            ok = ok || c == ':' || c == '/' || c == '?' || c == '&' || c == '=';
+        }
+        if (!ok)
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/* Decrypt a JMRH frame (or a raw SM4 block) before any OTA field is trusted. */
+static int jmrh_decrypt_command(const unsigned char *in, unsigned int len, unsigned char *out, unsigned int outcap, unsigned int *outlen)
+{
+    static const unsigned char magic[4] = {0x03, 0xB6, 0xA1, 0xE4};
+    unsigned int i;
+    unsigned int n;
+    int saw_frame = 0;
+
+    if (outlen)
+    {
+        *outlen = 0;
+    }
+    if ((in == 0) || (out == 0) || (outlen == 0) || (len < 16) || (outcap < 16))
+    {
+        return -1;
+    }
+
+    for (i = 0; (i + 33) <= len; i++)
+    {
+        unsigned int msglen;
+        unsigned int clen;
+
+        if (memcmp(in + i, magic, 4) != 0)
+        {
+            continue;
+        }
+        saw_frame = 1;
+        msglen = ((unsigned int)in[i + 12] << 24) | ((unsigned int)in[i + 13] << 16) |
+                 ((unsigned int)in[i + 14] << 8) | (unsigned int)in[i + 15];
+        if (msglen < 17)
+        {
+            continue;
+        }
+        clen = msglen - 17;
+        if ((clen == 0) || (clen % 16) || ((i + 33 + clen) > len) || (clen > outcap))
+        {
+            continue;
+        }
+        n = sm4_dec1(0, (void *)(in + i + 33), clen, out, outcap);
+        if (n)
+        {
+            *outlen = n;
+            return 0;
+        }
+    }
+
+    if (saw_frame)
+    {
+        return -1;
+    }
+    if (((len % 16) != 0) || (len > outcap))
+    {
+        return -1;
+    }
+    n = sm4_dec1(0, (void *)in, len, out, outcap);
+    if (n == 0)
+    {
+        return -1;
+    }
+    *outlen = n;
+    return 0;
+}
+
+static int jmrh_parse_ota_plain(unsigned char *pdat, unsigned int len)
 {
     if (len > (8 + 1 + 1 + 1 + 16 + 16))
     {
@@ -108,21 +213,56 @@ void jmrh_analyze_plat_data(void *pdat,unsigned int len)
         unsigned char urllen = 0;
         unsigned char usrlen = 0;
         unsigned char pswlen = 0;
+        unsigned int used;
 
-        purl = _find_sub_str(pdat,len,"ftp",3);
-        if (purl && ((purl - (unsigned char *)pdat) >= 8))
+        purl = _find_sub_str(pdat, len, "ftp", 3);
+        if (purl && ((purl - pdat) >= 8))
         {
             urllen = *(purl - 1);
-            if (urllen > (len - (unsigned int)(purl - (unsigned char *)pdat))) return ;
-            if (urllen) memcpy(url,purl,urllen);
+            used = (unsigned int)(purl - pdat);
+            if (urllen > (len - used))
+            {
+                return 0;
+            }
+            if (jmrh_plain_token_ok(purl, urllen, 1) == 0)
+            {
+                return 0;
+            }
+            memcpy(url, purl, urllen);
+            if ((used + urllen + 1) > len)
+            {
+                return 0;
+            }
             usrlen = *(purl + urllen);
-            if (usrlen > (len - (unsigned int)(purl - (unsigned char *)pdat) - urllen - 1)) return ;
-            if (usrlen >= 128) return ;
-            if (usrlen) memcpy(usr,purl + urllen + 1,usrlen);
+            if (usrlen > (len - used - urllen - 1))
+            {
+                return 0;
+            }
+            if (jmrh_plain_token_ok(purl + urllen + 1, usrlen, 0) == 0)
+            {
+                return 0;
+            }
+            if (usrlen)
+            {
+                memcpy(usr, purl + urllen + 1, usrlen);
+            }
+            if ((used + urllen + 1 + usrlen + 1) > len)
+            {
+                return 0;
+            }
             pswlen = *(purl + urllen + 1 + usrlen);
-            if (pswlen > (len - (unsigned int)(purl - (unsigned char *)pdat) - urllen - 1 - usrlen - 1)) return ;
-            if (pswlen >= 128) return ;
-            if (pswlen) memcpy(psw,purl + urllen + 1 + usrlen + 1,pswlen);
+            if (pswlen > (len - used - urllen - 1 - usrlen - 1))
+            {
+                return 0;
+            }
+            if (jmrh_plain_token_ok(purl + urllen + 1 + usrlen + 1, pswlen, 0) == 0)
+            {
+                return 0;
+            }
+            if (pswlen)
+            {
+                memcpy(psw, purl + urllen + 1 + usrlen + 1, pswlen);
+            }
 
             if (jmrh_ota_cb_func)
             {
@@ -130,14 +270,40 @@ void jmrh_analyze_plat_data(void *pdat,unsigned int len)
                 stOTAParam.usr = usr;
                 stOTAParam.psw = psw;
                 jmrh_ota_cb_func(&stOTAParam);
+                return 1;
             }
         }
         else
         {
-            purl = _find_sub_str(pdat,len,"http",4);
+            purl = _find_sub_str(pdat, len, "http", 4);
+            (void)purl;
         }
     }
+    return 0;
+}
 
+void jmrh_analyze_plat_data(void *pdat, unsigned int len)
+{
+    unsigned char plain[2048];
+    unsigned int plain_len = 0;
+
+    if ((pdat == 0) || (len == 0) || (len > sizeof(plain)))
+    {
+        return;
+    }
+    /*
+     * Plaintext FTP servers already carry ftp://. Fetch that record with argv wget.
+     * If it is not a valid plaintext record, try SM4 when the buffer looks encrypted.
+     */
+    if (jmrh_parse_ota_plain((unsigned char *)pdat, len))
+    {
+        return;
+    }
+    if (jmrh_decrypt_command((const unsigned char *)pdat, len, plain, sizeof(plain), &plain_len) != 0)
+    {
+        return;
+    }
+    jmrh_parse_ota_plain(plain, plain_len);
 }
 
 

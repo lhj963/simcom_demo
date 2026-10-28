@@ -14,6 +14,7 @@ extern unsigned int sm4_enc(unsigned char sm4_type,void *psrc,unsigned int srcle
 extern void dx83_lib_init(void);
 extern void dx83_test3(void);
 extern unsigned int sm4_enc1(unsigned char sm4_type,void *psrc,unsigned int srclen,void *pOut,unsigned int outbuflen);
+extern unsigned int sm4_dec1(unsigned char sm4_type,void *psrc,unsigned int srclen,void *pOut,unsigned int outbuflen);
 
 extern int handshake_plat(void *pvin, void *ip,unsigned int port);
 
