@@ -303,23 +303,15 @@ void mpu_firmware_proc(void *pdat, unsigned int datlen)
 
 void cfg_firmware_proc(void *pdat, unsigned int datlen)
 {
-	system("rm -rf /data/sysparam.cfg");
-	DBG_SendDataEx("/data/sysparam.cfg", pdat, datlen);
+	if (pdat && datlen)
+	{
+		mywritefile(0, "/data/sysparam.cfg", pdat, datlen);
+	}
 }
 
 void lib_firmware_proc(void *filename, void *pdat, unsigned int datlen)
 {
-	char fn[96] = {0};
-	char cmd[128] = {0};
-
-	if (filename)
-	{
-		sprintf(fn, "/usr/lib/%s", (char *)filename);
-
-		snprintf(cmd, sizeof(cmd) - 1, "rm -rf %s", fn);
-		system(cmd);
-		DBG_SendDataEx(fn, pdat, datlen);
-	}
+	box_install_library((const char *)filename, pdat, datlen);
 }
 
 void update_box_firmware(void)
