@@ -1133,6 +1133,81 @@ int mcu_exec_allowlisted_cmd(const void *payload, unsigned int len, const char *
 	return 0;
 }
 
+static int ftp_cred_ok(const char *s)
+{
+	size_t i;
+	size_t n;
+
+	if (s == 0)
+	{
+		return 0;
+	}
+	n = strlen(s);
+	if (n > 127)
+	{
+		return 0;
+	}
+	for (i = 0; i < n; i++)
+	{
+		unsigned char c = (unsigned char)s[i];
+
+		if (c < 0x21 || c > 0x7e)
+		{
+			return 0;
+		}
+	}
+	return 1;
+}
+
+int safe_ftp_get(const char *url, const char *user, const char *pass, const char *outfile)
+{
+	char *argv[12];
+	int n = 0;
+
+	if ((url == 0) || (outfile == 0))
+	{
+		return -1;
+	}
+	if (strncmp(url, "ftp://", 6) != 0)
+	{
+		return -1;
+	}
+	if (download_url_token_ok(url) == 0)
+	{
+		return -1;
+	}
+	if ((ftp_cred_ok(user ? user : "") == 0) || (ftp_cred_ok(pass ? pass : "") == 0))
+	{
+		return -1;
+	}
+	if ((outfile[0] != '/') || strstr(outfile, "..") || strchr(outfile, ' ') || strchr(outfile, '\t'))
+	{
+		return -1;
+	}
+
+	argv[n++] = "wget";
+	argv[n++] = "-O";
+	argv[n++] = (char *)outfile;
+	if (user && user[0])
+	{
+		argv[n++] = "--ftp-user";
+		argv[n++] = (char *)user;
+	}
+	if (pass && pass[0])
+	{
+		argv[n++] = "--ftp-password";
+		argv[n++] = (char *)pass;
+	}
+	argv[n++] = "--";
+	argv[n++] = (char *)url;
+	argv[n++] = 0;
+	if (exec_argv_status(argv) != 0)
+	{
+		return -1;
+	}
+	return 0;
+}
+
 // ֪ͨ���� ���ӽ���
 int QueueMsgDealOk(INT8U Qnum)
 {

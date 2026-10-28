@@ -35,6 +35,9 @@ extern int exec_argv_status(char *const argv[]);
 extern int mcu_exec_allowlisted_cmd(const void *payload, unsigned int len,
 									const char **out_path, char *url_out, unsigned int url_out_len);
 
+/* FTP GET via wget argv. Credentials are separate arguments, never a shell string. */
+extern int safe_ftp_get(const char *url, const char *user, const char *pass, const char *outfile);
+
 extern unsigned int myreadfile1(void *filename,unsigned int offset,void *pbuf,unsigned int buflen);
 
 extern unsigned int myreadfile(void *filename,void *pbuf,unsigned int buflen);
