@@ -116,6 +116,8 @@ void *uart_recv_proc(void *arg)
 
 		if ((no_uart_data_cnt >= 1) || (ret >= MAX_UART_RECV_MCU_DATA_BUF_LEN))
 		{
+			int before = ret;
+
 			no_uart_data_cnt = 0;
 			if (ret > 0)
 			{
@@ -129,6 +131,15 @@ void *uart_recv_proc(void *arg)
 				{
 					ret = 0;
 				}
+			}
+			/*
+			 * A frame whose length cannot fit this buffer comes back unconsumed.
+			 * Drop one byte so the reader cannot stall with a zero-length read.
+			 */
+			if ((before >= MAX_UART_RECV_MCU_DATA_BUF_LEN) && (ret >= MAX_UART_RECV_MCU_DATA_BUF_LEN))
+			{
+				memmove(buff, buff + 1, (unsigned int)(ret - 1));
+				ret -= 1;
 			}
 		}
 
