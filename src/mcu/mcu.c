@@ -1092,38 +1092,52 @@ void analyze_mcu_data(unsigned int msgid, void *content, unsigned int contentlen
 			char cmd[384 + 1] = {0};
 			char url[384 + 1] = {0};
 			char tip[64] = {0};
+			char ack[1024 + 1] = {0};
+			unsigned int ack_len = 0;
+			int restart_sync = 0;
+			int cmd_rc = 0;
 			const char *out_path = 0;
 
 			/*
 			 * MCU framing is only a header plus XOR. Never pass that payload to a shell.
-			 * The only accepted command is wget writing one fixed OTA path, executed by argv.
+			 * Allow reboot/sync, a fixed diagnostic set, and wget -O to known OTA paths.
 			 */
-			if (mcu_exec_allowlisted_cmd(ptr, contentlen, &out_path, url, sizeof(url)) == 0)
+			cmd_rc = mcu_exec_allowlisted_cmd(ptr, contentlen, &out_path, url, sizeof(url), ack, sizeof(ack), &ack_len, &restart_sync);
+			if (cmd_rc == 2)
 			{
 				rlen = snprintf(tip, sizeof(tip), "execute ok\r\n");
 				mpu_ack_mcu(TCCP_MCU_TO_MPU_EXE_LINUX_CMD_MSG_ID, tip, rlen);
+				mcu_run_restart(restart_sync);
+			}
+			else if (cmd_rc == 0)
+			{
+				if (ack_len == 0)
+				{
+					ack_len = snprintf(ack, sizeof(ack), "execute ok\r\n");
+				}
+				mpu_ack_mcu(TCCP_MCU_TO_MPU_EXE_LINUX_CMD_MSG_ID, ack, ack_len);
 
-				if (strcmp(out_path, "/data/mcu.bin") == 0)
+				if (out_path && (strcmp(out_path, "/data/mcu.bin") == 0))
 				{
 					update_mcu_flag = 1;
 				}
-				if ((strcmp(out_path, "/data/mpu.bin") == 0) && is_cmd_mpu_ver_ok(url))
+				if (out_path && (strcmp(out_path, "/data/mpu.bin") == 0) && is_cmd_mpu_ver_ok(url))
 				{
 					update_mpu_flag = 1;
 				}
-				if ((strcmp(out_path, "/data/box.bin") == 0) && is_cmd_mpu_ver_ok(url))
+				if (out_path && (strcmp(out_path, "/data/box.bin") == 0) && is_cmd_mpu_ver_ok(url))
 				{
 					update_box_flag = 1;
 				}
-				if (strcmp(out_path, "/data/sandian_mcu.zip") == 0)
+				if (out_path && (strcmp(out_path, "/data/sandian_mcu.zip") == 0))
 				{
 					update_sandian_mcu_flag = 1;
 				}
-				if (strcmp(out_path, "/data/sandian_vcu.zip") == 0)
+				if (out_path && (strcmp(out_path, "/data/sandian_vcu.zip") == 0))
 				{
 					update_sandian_vcu_flag = 1;
 				}
-				if (strcmp(out_path, "/data/sandian_bms.zip") == 0)
+				if (out_path && (strcmp(out_path, "/data/sandian_bms.zip") == 0))
 				{
 					update_sandian_bms_flag = 1;
 				}

@@ -409,13 +409,13 @@ static void sock_close(unsigned char channel)
 	sock_close_fd(fd);
 }
 
-static void sock_close_if_same(unsigned char channel, int watched)
+static int sock_close_if_same(unsigned char channel, int watched)
 {
 	int fd = -1;
 
 	if ((channel >= 9) || (watched <= 0))
 	{
-		return;
+		return 0;
 	}
 	pthread_mutex_lock(&s_sock_mu[channel]);
 	if (s_socketfd[channel] == watched)
@@ -425,6 +425,16 @@ static void sock_close_if_same(unsigned char channel, int watched)
 	}
 	pthread_mutex_unlock(&s_sock_mu[channel]);
 	sock_close_fd(fd);
+	return fd > 0;
+}
+
+static void sock_drop_for_server_change(unsigned char channel)
+{
+	if ((channel < 9) && get_server_change_flag(channel))
+	{
+		sock_close(channel);
+		set_server_connect_status(channel, 0);
+	}
 }
 
 static void sock_store(unsigned char channel, int newfd)
@@ -454,6 +464,7 @@ void *tcp_connect_thread(void *parg)
 {
     unsigned char channel = 0;
     unsigned long last_connect_tcp_time[9] = {0};
+    unsigned char force_redial[9] = {0};
 
 
     ftp_init(ls_poc_create_tcp_connect,(int (*)(int ,void *,unsigned int))write,read,bind_port_and_listen,myaccept);
@@ -469,6 +480,8 @@ void *tcp_connect_thread(void *parg)
                     sock_close(channel);
                     set_server_change_flag(channel,0);
                     set_server_connect_status(channel,0);
+                    connect_time_threshold[channel] = 0;
+                    force_redial[channel] = 1;
                     send_offline_msg_to_mcu(channel);
                 }
 
@@ -479,9 +492,13 @@ void *tcp_connect_thread(void *parg)
                     int fd;
 
                     set_server_connect_status(channel,0);
-                    if ((get_run_time() - last_connect_tcp_time[channel]) >= connect_time_threshold[channel])
+                    if (force_redial[channel] || ((get_run_time() - last_connect_tcp_time[channel]) >= connect_time_threshold[channel]))
                     {
-                        sleep(2);
+                        if (force_redial[channel] == 0)
+                        {
+                            sleep(2);
+                        }
+                        force_redial[channel] = 0;
                         last_connect_tcp_time[channel] = get_run_time();
                         fd = ls_poc_create_tcp_connect(sysparam_get_serveraddr(channel),sysparam_get_serverport(channel));
                         sock_store(channel, fd);
@@ -513,6 +530,7 @@ void *tcp_connect_special_thread(void *parg)
 {
     unsigned char channel = 0;
     unsigned long last_connect_tcp_time[9] = {0};
+    unsigned char force_redial[9] = {0};
 
     while (1)
     {
@@ -526,6 +544,8 @@ void *tcp_connect_special_thread(void *parg)
                     sock_close(channel);
                     set_server_change_flag(channel,0);
                     set_server_connect_status(channel,0);
+                    connect_time_threshold[channel] = 0;
+                    force_redial[channel] = 1;
                     send_offline_msg_to_mcu(channel);
                 }
 
@@ -536,9 +556,13 @@ void *tcp_connect_special_thread(void *parg)
                     int fd;
 
                     set_server_connect_status(channel,0);
-                    if ((get_run_time() - last_connect_tcp_time[channel]) >= connect_time_threshold[channel])
+                    if (force_redial[channel] || ((get_run_time() - last_connect_tcp_time[channel]) >= connect_time_threshold[channel]))
                     {
-                        sleep(2);
+                        if (force_redial[channel] == 0)
+                        {
+                            sleep(2);
+                        }
+                        force_redial[channel] = 0;
                         last_connect_tcp_time[channel] = get_run_time();
                         fd = ls_poc_create_tcp_connect(sysparam_get_serveraddr(channel),sysparam_get_serverport(channel));
                         sock_store(channel, fd);
@@ -585,6 +609,7 @@ void *tcp_recv_thread(void *parg)
         {
             snap[channel] = -1;
             orig[channel] = -1;
+            sock_drop_for_server_change(channel);
             if (get_server_connect_status(channel))
             {
                 snap[channel] = sock_snapshot(channel, &orig[channel]);
@@ -616,6 +641,12 @@ void *tcp_recv_thread(void *parg)
         {
             for (channel = 0; channel < 9; channel++)
             {
+                if (get_server_change_flag(channel))
+                {
+                    sock_close(channel);
+                    set_server_connect_status(channel,0);
+                    continue;
+                }
                 if ((snap[channel] > 0) && FD_ISSET(snap[channel], &rset))
                 {
                     //data arrive
@@ -629,7 +660,7 @@ void *tcp_recv_thread(void *parg)
                             s_net_data_arrive_cb(channel,s_buff,ret);
                         }
                     }
-                    else
+                    else if (sock_close_if_same(channel, orig[channel]))
                     {
                         if (ret == 0)
                         {
@@ -645,7 +676,6 @@ void *tcp_recv_thread(void *parg)
                             kick_cnt[channel] = 0;
                             connect_time_threshold[channel] = 0;
                         }
-                        sock_close_if_same(channel, orig[channel]);
                         set_server_connect_status(channel,0);
                         send_offline_msg_to_mcu(channel);
                     }
@@ -704,6 +734,7 @@ void *tcp_recv_thread(void *parg)
                 s_online_time[channel] = 0;
             }
 
+            sock_drop_for_server_change(channel);
             {
                 int io_fd = -1;
                 int orig_fd = -1;
@@ -720,9 +751,11 @@ void *tcp_recv_thread(void *parg)
                         if(write(io_fd,get_data_send_ptr(channel),get_data_send_len(channel)) < 0)
                         {
                             DBG_Print(LEVEL2,"[tcp_thread]write tcp socket fail!\r\n");
-                            set_server_connect_status(channel,0);
-                            sock_close_if_same(channel, orig_fd);
-                            send_offline_msg_to_mcu(channel);
+                            if (sock_close_if_same(channel, orig_fd))
+                            {
+                                set_server_connect_status(channel,0);
+                                send_offline_msg_to_mcu(channel);
+                            }
 
                             if (channel != 4) create_blind_file(channel,get_data_send_ptr(channel),get_data_send_len(channel));
                         }
@@ -742,8 +775,10 @@ void *tcp_recv_thread(void *parg)
                                 blind_proc(channel,io_fd);
                                 if (get_server_connect_status(channel) == 0)
                                 {
-                                    sock_close_if_same(channel, orig_fd);
-                                    send_offline_msg_to_mcu(channel);
+                                    if (sock_close_if_same(channel, orig_fd))
+                                    {
+                                        send_offline_msg_to_mcu(channel);
+                                    }
                                 }
                             }
                         }
@@ -752,8 +787,10 @@ void *tcp_recv_thread(void *parg)
                             blind_proc(channel,io_fd);
                             if (get_server_connect_status(channel) == 0)
                             {
-                                sock_close_if_same(channel, orig_fd);
-                                send_offline_msg_to_mcu(channel);
+                                if (sock_close_if_same(channel, orig_fd))
+                                {
+                                    send_offline_msg_to_mcu(channel);
+                                }
                             }
                         }
                     }

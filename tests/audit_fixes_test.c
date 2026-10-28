@@ -43,12 +43,21 @@ unsigned int sm4_dec1(unsigned char sm4_type, void *psrc, unsigned int srclen, v
 	return 0;
 }
 
+static int run_cmd(const char *cmd, const char **out, char *url, unsigned int url_len, char *ack, unsigned int ack_cap, unsigned int *ack_len, int *sync_first)
+{
+	return mcu_exec_allowlisted_cmd(cmd, (unsigned int)strlen(cmd), out, url, url_len, ack, ack_cap, ack_len, sync_first);
+}
+
 static void test_allowlist_rejects_shell(void)
 {
 	const char *out = 0;
 	char url[64];
+	char ack[128];
+	unsigned int ack_len = 0;
+	int sync_first = 0;
 	const char *bad[] = {
 		"id",
+		"reboot;id",
 		"wget -O /etc/passwd ftp://h/a.bin",
 		"wget -O /data/mcu.bin ftp://h/a.bin;id",
 		"wget -O /data/mcu.bin ftp://h/a.bin | sh",
@@ -59,12 +68,37 @@ static void test_allowlist_rejects_shell(void)
 
 	for (i = 0; i < sizeof(bad) / sizeof(bad[0]); i++)
 	{
-		int rc = mcu_exec_allowlisted_cmd(bad[i], (unsigned int)strlen(bad[i]), &out, url, sizeof(url));
+		int rc = run_cmd(bad[i], &out, url, sizeof(url), ack, sizeof(ack), &ack_len, &sync_first);
 		if (rc != -1)
 		{
-			fprintf(stderr, "allowlist accepted: %s\n", bad[i]);
+			fprintf(stderr, "allowlist accepted: %s (rc=%d)\n", bad[i], rc);
 			exit(1);
 		}
+	}
+
+	sync_first = 1;
+	if (run_cmd("reboot", &out, url, sizeof(url), ack, sizeof(ack), &ack_len, &sync_first) != 2 || sync_first != 0)
+	{
+		fprintf(stderr, "reboot was not allowlisted without running\n");
+		exit(1);
+	}
+	sync_first = 0;
+	if (run_cmd("sync; reboot", &out, url, sizeof(url), ack, sizeof(ack), &ack_len, &sync_first) != 2 || sync_first != 1)
+	{
+		fprintf(stderr, "sync; reboot was not allowlisted\n");
+		exit(1);
+	}
+	sync_first = 0;
+	if (run_cmd("sync && reboot", &out, url, sizeof(url), ack, sizeof(ack), &ack_len, &sync_first) != 2 || sync_first != 1)
+	{
+		fprintf(stderr, "sync && reboot was not allowlisted\n");
+		exit(1);
+	}
+	ack_len = 0;
+	if (run_cmd("ps", &out, url, sizeof(url), ack, sizeof(ack), &ack_len, &sync_first) != 0 || ack_len == 0)
+	{
+		fprintf(stderr, "ps diagnostic was not captured\n");
+		exit(1);
 	}
 }
 
@@ -140,20 +174,35 @@ static void test_uart_resync(void)
 	}
 }
 
-static void test_jmrh_plaintext_does_not_download(void)
+static void test_jmrh_plaintext_and_cipher(void)
 {
-	unsigned char buf[] = {
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0x0B, 'f', 't', 'p', ':', '/', '/', 'h', '/', 'a', 'b',
-		0x01, 'u',
-		0x01, 'p'};
+	unsigned char plain[64];
+	unsigned char cipher[32];
+	const char *url = "ftp://h/a";
+
+	memset(plain, 0, sizeof(plain));
+	plain[8] = (unsigned char)strlen(url);
+	memcpy(plain + 9, url, strlen(url));
+	plain[9 + strlen(url)] = 1;
+	plain[10 + strlen(url)] = 'u';
+	plain[11 + strlen(url)] = 1;
+	plain[12 + strlen(url)] = 'p';
 
 	g_ota = 0;
 	reg_jmrh_ota_cb_func(on_ota);
-	jmrh_analyze_plat_data(buf, sizeof(buf));
+	jmrh_analyze_plat_data(plain, sizeof(plain));
+	if (g_ota != 1)
+	{
+		fprintf(stderr, "plaintext ftp:// did not start argv OTA\n");
+		exit(1);
+	}
+
+	memset(cipher, 0xA5, sizeof(cipher));
+	g_ota = 0;
+	jmrh_analyze_plat_data(cipher, sizeof(cipher));
 	if (g_ota != 0)
 	{
-		fprintf(stderr, "plaintext ftp triggered OTA before decrypt\n");
+		fprintf(stderr, "undecryptable buffer started OTA\n");
 		exit(1);
 	}
 }
@@ -219,7 +268,7 @@ int main(void)
 	test_allowlist_rejects_shell();
 	test_safe_ftp_rejects();
 	test_uart_resync();
-	test_jmrh_plaintext_does_not_download();
+	test_jmrh_plaintext_and_cipher();
 	test_durable_write();
 	test_box_name();
 	printf("audit fix checks passed\n");

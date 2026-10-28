@@ -1132,7 +1132,278 @@ int exec_argv_status(char *const argv[])
 	return -1;
 }
 
-int mcu_exec_allowlisted_cmd(const void *payload, unsigned int len, const char **out_path, char *url_out, unsigned int url_out_len)
+static int exec_argv_capture(char *const argv[], char *out, unsigned int outcap, unsigned int *outlen)
+{
+	int pipes[2];
+	posix_spawn_file_actions_t actions;
+	pid_t pid;
+	int status = 0;
+	int rc;
+	unsigned int got = 0;
+
+	if (outlen)
+	{
+		*outlen = 0;
+	}
+	if ((argv == 0) || (argv[0] == 0) || (pipe(pipes) != 0))
+	{
+		return -1;
+	}
+	if (posix_spawn_file_actions_init(&actions) != 0)
+	{
+		close(pipes[0]);
+		close(pipes[1]);
+		return -1;
+	}
+	posix_spawn_file_actions_adddup2(&actions, pipes[1], STDOUT_FILENO);
+	posix_spawn_file_actions_addclose(&actions, pipes[0]);
+	posix_spawn_file_actions_addclose(&actions, pipes[1]);
+	rc = posix_spawnp(&pid, argv[0], &actions, 0, argv, environ);
+	posix_spawn_file_actions_destroy(&actions);
+	close(pipes[1]);
+	if (rc != 0)
+	{
+		close(pipes[0]);
+		return -1;
+	}
+	if (out && outcap)
+	{
+		while (got + 1 < outcap)
+		{
+			ssize_t n = read(pipes[0], out + got, outcap - 1 - got);
+
+			if (n < 0)
+			{
+				if (errno == EINTR)
+				{
+					continue;
+				}
+				break;
+			}
+			if (n == 0)
+			{
+				break;
+			}
+			got += (unsigned int)n;
+		}
+		out[got] = 0;
+	}
+	close(pipes[0]);
+	do
+	{
+		rc = waitpid(pid, &status, 0);
+	} while ((rc < 0) && (errno == EINTR));
+	if (outlen)
+	{
+		*outlen = got;
+	}
+	if (rc < 0)
+	{
+		return -1;
+	}
+	return 0;
+}
+
+static void normalize_ws(const char *in, char *out, size_t cap)
+{
+	size_t o = 0;
+	int gap = 1;
+
+	if ((out == 0) || (cap == 0))
+	{
+		return;
+	}
+	if (in == 0)
+	{
+		out[0] = 0;
+		return;
+	}
+	for (; *in && (o + 1 < cap); in++)
+	{
+		if ((*in == ' ') || (*in == '\t'))
+		{
+			if (gap == 0)
+			{
+				out[o++] = ' ';
+				gap = 1;
+			}
+		}
+		else
+		{
+			out[o++] = *in;
+			gap = 0;
+		}
+	}
+	if ((o > 0) && (out[o - 1] == ' '))
+	{
+		o--;
+	}
+	out[o] = 0;
+}
+
+static void compact_nospace(const char *in, char *out, size_t cap)
+{
+	size_t o = 0;
+
+	if ((out == 0) || (cap == 0))
+	{
+		return;
+	}
+	if (in == 0)
+	{
+		out[0] = 0;
+		return;
+	}
+	for (; *in && (o + 1 < cap); in++)
+	{
+		if ((*in == ' ') || (*in == '\t'))
+		{
+			continue;
+		}
+		out[o++] = *in;
+	}
+	out[o] = 0;
+}
+
+static int host_token_ok(const char *s)
+{
+	size_t i;
+	size_t n;
+
+	if ((s == 0) || (s[0] == 0) || (s[0] == '-'))
+	{
+		return 0;
+	}
+	n = strlen(s);
+	if (n > 64)
+	{
+		return 0;
+	}
+	for (i = 0; i < n; i++)
+	{
+		unsigned char c = (unsigned char)s[i];
+
+		if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+			  c == '.' || c == '-' || c == ':'))
+		{
+			return 0;
+		}
+	}
+	return 1;
+}
+
+static int diag_command(const char *norm, char *ack, unsigned int ack_cap, unsigned int *ack_len)
+{
+	static const char *fixed[] = {
+		"ifconfig",
+		"ifconfig -a",
+		"ps",
+		"ps -ef",
+		"df",
+		"df -h",
+		"free",
+		"date",
+		"uptime",
+		"route",
+		"route -n",
+		"mount",
+		"ls /data",
+		"ls /media/card",
+		"cat /proc/uptime",
+		"cat /proc/meminfo",
+		"cat /proc/net/dev",
+		"cat /proc/version",
+		"dmesg",
+		0};
+	char buf[384 + 1];
+	char *save = 0;
+	char *tok[4];
+	char *argv[5];
+	int ntok = 0;
+	int i;
+
+	for (i = 0; fixed[i]; i++)
+	{
+		if (strcmp(norm, fixed[i]) == 0)
+		{
+			snprintf(buf, sizeof(buf), "%s", fixed[i]);
+			tok[ntok] = strtok_r(buf, " ", &save);
+			while (tok[ntok] && (ntok < 4))
+			{
+				ntok++;
+				tok[ntok] = strtok_r(0, " ", &save);
+			}
+			if ((ntok <= 0) || (ntok > 4))
+			{
+				return -1;
+			}
+			for (i = 0; i < ntok; i++)
+			{
+				argv[i] = tok[i];
+			}
+			argv[ntok] = 0;
+			return exec_argv_capture(argv, ack, ack_cap, ack_len);
+		}
+	}
+
+	if (strncmp(norm, "ping -c ", 8) == 0)
+	{
+		char *cursor;
+		char count[8];
+		char host[68];
+
+		snprintf(buf, sizeof(buf), "%s", norm);
+		cursor = buf;
+		tok[0] = strtok_r(cursor, " ", &save);
+		tok[1] = strtok_r(0, " ", &save);
+		tok[2] = strtok_r(0, " ", &save);
+		tok[3] = strtok_r(0, " ", &save);
+		if ((tok[0] == 0) || (tok[1] == 0) || (tok[2] == 0) || (tok[3] == 0) || (strtok_r(0, " ", &save) != 0))
+		{
+			return -1;
+		}
+		if ((strcmp(tok[0], "ping") != 0) || (strcmp(tok[1], "-c") != 0))
+		{
+			return -1;
+		}
+		if ((strcmp(tok[2], "1") != 0) && (strcmp(tok[2], "2") != 0) && (strcmp(tok[2], "3") != 0) && (strcmp(tok[2], "4") != 0))
+		{
+			return -1;
+		}
+		if (host_token_ok(tok[3]) == 0)
+		{
+			return -1;
+		}
+		snprintf(count, sizeof(count), "%s", tok[2]);
+		snprintf(host, sizeof(host), "%s", tok[3]);
+		argv[0] = "ping";
+		argv[1] = "-c";
+		argv[2] = count;
+		argv[3] = host;
+		argv[4] = 0;
+		return exec_argv_capture(argv, ack, ack_cap, ack_len);
+	}
+	return -1;
+}
+
+void mcu_run_restart(int with_sync)
+{
+	char *sync_argv[2];
+	char *reboot_argv[2];
+
+	sync_argv[0] = "sync";
+	sync_argv[1] = 0;
+	reboot_argv[0] = "reboot";
+	reboot_argv[1] = 0;
+	if (with_sync)
+	{
+		exec_argv_status(sync_argv);
+	}
+	exec_argv_status(reboot_argv);
+}
+
+int mcu_exec_allowlisted_cmd(const void *payload, unsigned int len, const char **out_path, char *url_out, unsigned int url_out_len,
+							 char *ack, unsigned int ack_cap, unsigned int *ack_len, int *restart_with_sync)
 {
 	static const char *allowed[] = {
 		"/data/mcu.bin",
@@ -1142,7 +1413,9 @@ int mcu_exec_allowlisted_cmd(const void *payload, unsigned int len, const char *
 		"/data/sandian_vcu.zip",
 		"/data/sandian_bms.zip",
 		0};
-	char buf[384 + 1];
+	char raw[384 + 1];
+	char norm[384 + 1];
+	char compact[384 + 1];
 	char *save = 0;
 	char *cursor;
 	char *tok[6];
@@ -1154,6 +1427,14 @@ int mcu_exec_allowlisted_cmd(const void *payload, unsigned int len, const char *
 	if (out_path)
 	{
 		*out_path = 0;
+	}
+	if (ack_len)
+	{
+		*ack_len = 0;
+	}
+	if (restart_with_sync)
+	{
+		*restart_with_sync = 0;
 	}
 	if ((payload == 0) || (len == 0) || (len > 384) || (url_out == 0) || (url_out_len == 0))
 	{
@@ -1168,9 +1449,39 @@ int mcu_exec_allowlisted_cmd(const void *payload, unsigned int len, const char *
 		return -1;
 	}
 
-	memcpy(buf, payload, len);
-	buf[len] = 0;
-	cursor = buf;
+	memcpy(raw, payload, len);
+	raw[len] = 0;
+	normalize_ws(raw, norm, sizeof(norm));
+	compact_nospace(norm, compact, sizeof(compact));
+	if ((strcmp(compact, "reboot") == 0) || (strcmp(compact, "/sbin/reboot") == 0))
+	{
+		return 2;
+	}
+	if (strcmp(compact, "sync") == 0)
+	{
+		argv[0] = "sync";
+		argv[1] = 0;
+		if (exec_argv_status(argv) != 0)
+		{
+			return -1;
+		}
+		return 0;
+	}
+	if ((strcmp(compact, "sync;reboot") == 0) || (strcmp(compact, "sync&&reboot") == 0))
+	{
+		if (restart_with_sync)
+		{
+			*restart_with_sync = 1;
+		}
+		return 2;
+	}
+
+	if (diag_command(norm, ack, ack_cap, ack_len) == 0)
+	{
+		return 0;
+	}
+
+	cursor = norm;
 	while (ntok < 6)
 	{
 		char *t = strtok_r(cursor, " \t", &save);

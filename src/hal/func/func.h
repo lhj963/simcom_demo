@@ -31,12 +31,20 @@ extern int durable_write_file(const char *path, const void *data, unsigned int l
 extern int exec_argv_status(char *const argv[]);
 
 /*
- * MCU remote command: only `wget -O <fixed path> <url>` is executed, via argv.
- * Returns 0 after wget exits 0. out_path is a static allowlisted path.
- * url_out receives the URL. Any other payload is rejected and not executed.
+ * MCU remote command, argv only (never a shell).
+ * Returns 0 if a command ran. out_path is set for a successful wget -O to a fixed OTA path.
+ * Returns 2 if the command is an allowlisted restart (reboot / sync&&reboot) and has not
+ * been executed yet; *restart_with_sync is 1 when sync should run first. Call
+ * mcu_run_restart after acking the MCU.
+ * Returns -1 if the payload is not on the allowlist.
+ * ack receives captured stdout for diagnostic commands.
  */
 extern int mcu_exec_allowlisted_cmd(const void *payload, unsigned int len,
-									const char **out_path, char *url_out, unsigned int url_out_len);
+									const char **out_path, char *url_out, unsigned int url_out_len,
+									char *ack, unsigned int ack_cap, unsigned int *ack_len,
+									int *restart_with_sync);
+
+extern void mcu_run_restart(int with_sync);
 
 /* FTP GET via wget argv. Credentials are separate arguments, never a shell string. */
 extern int safe_ftp_get(const char *url, const char *user, const char *pass, const char *outfile);

@@ -200,7 +200,7 @@ static int jmrh_decrypt_command(const unsigned char *in, unsigned int len, unsig
     return 0;
 }
 
-static void jmrh_parse_ota_plain(unsigned char *pdat, unsigned int len)
+static int jmrh_parse_ota_plain(unsigned char *pdat, unsigned int len)
 {
     if (len > (8 + 1 + 1 + 1 + 16 + 16))
     {
@@ -222,25 +222,25 @@ static void jmrh_parse_ota_plain(unsigned char *pdat, unsigned int len)
             used = (unsigned int)(purl - pdat);
             if (urllen > (len - used))
             {
-                return;
+                return 0;
             }
             if (jmrh_plain_token_ok(purl, urllen, 1) == 0)
             {
-                return;
+                return 0;
             }
             memcpy(url, purl, urllen);
             if ((used + urllen + 1) > len)
             {
-                return;
+                return 0;
             }
             usrlen = *(purl + urllen);
             if (usrlen > (len - used - urllen - 1))
             {
-                return;
+                return 0;
             }
             if (jmrh_plain_token_ok(purl + urllen + 1, usrlen, 0) == 0)
             {
-                return;
+                return 0;
             }
             if (usrlen)
             {
@@ -248,16 +248,16 @@ static void jmrh_parse_ota_plain(unsigned char *pdat, unsigned int len)
             }
             if ((used + urllen + 1 + usrlen + 1) > len)
             {
-                return;
+                return 0;
             }
             pswlen = *(purl + urllen + 1 + usrlen);
             if (pswlen > (len - used - urllen - 1 - usrlen - 1))
             {
-                return;
+                return 0;
             }
             if (jmrh_plain_token_ok(purl + urllen + 1 + usrlen + 1, pswlen, 0) == 0)
             {
-                return;
+                return 0;
             }
             if (pswlen)
             {
@@ -270,6 +270,7 @@ static void jmrh_parse_ota_plain(unsigned char *pdat, unsigned int len)
                 stOTAParam.usr = usr;
                 stOTAParam.psw = psw;
                 jmrh_ota_cb_func(&stOTAParam);
+                return 1;
             }
         }
         else
@@ -278,6 +279,7 @@ static void jmrh_parse_ota_plain(unsigned char *pdat, unsigned int len)
             (void)purl;
         }
     }
+    return 0;
 }
 
 void jmrh_analyze_plat_data(void *pdat, unsigned int len)
@@ -289,7 +291,14 @@ void jmrh_analyze_plat_data(void *pdat, unsigned int len)
     {
         return;
     }
-    /* The socket buffer is ciphertext. Do not scan it for "ftp" until SM4 succeeds. */
+    /*
+     * Plaintext FTP servers already carry ftp://. Fetch that record with argv wget.
+     * If it is not a valid plaintext record, try SM4 when the buffer looks encrypted.
+     */
+    if (jmrh_parse_ota_plain((unsigned char *)pdat, len))
+    {
+        return;
+    }
     if (jmrh_decrypt_command((const unsigned char *)pdat, len, plain, sizeof(plain), &plain_len) != 0)
     {
         return;
