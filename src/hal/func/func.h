@@ -24,6 +24,9 @@ extern void gpsutc_to_btc(unsigned char *year,unsigned char *month,unsigned char
 
 extern void mywritefile(char create_way,void *full_path_file_name,void *ptr,unsigned int len);
 
+/* Write path via temp file, fsync, and rename. The previous file stays until the new one is durable. */
+extern int durable_write_file(const char *path, const void *data, unsigned int len);
+
 /* Run argv[0] with posix_spawnp (no shell). Returns the exit status, or -1. */
 extern int exec_argv_status(char *const argv[]);
 

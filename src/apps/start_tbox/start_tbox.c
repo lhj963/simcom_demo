@@ -1151,18 +1151,14 @@ int _load_param_func(void *full_path_filename, void *sysparam, unsigned int sysp
 
 int _save_param_func(void *full_path_filename, void *sysparam, unsigned int sysparamlen)
 {
-	FILE *fp;
-
 	if ((full_path_filename == 0) || (sysparam == 0) || (sysparamlen == 0))
 	{
 		return 2;
 	}
 
-	fp = fopen(full_path_filename, "wb+");
-	if (fp)
+	if (durable_write_file((const char *)full_path_filename, sysparam, sysparamlen) != 0)
 	{
-		fwrite(sysparam, sysparamlen, 1, fp);
-		fclose(fp);
+		return 1;
 	}
 	return 0;
 }

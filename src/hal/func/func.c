@@ -1,6 +1,8 @@
 #include "func.h"
 #include <errno.h>
+#include <fcntl.h>
 #include <spawn.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -122,6 +124,99 @@ void gpsutc_to_btc(unsigned char *year, unsigned char *month, unsigned char *day
 	}
 }
 
+int durable_write_file(const char *path, const void *data, unsigned int len)
+{
+	char tmp[512];
+	char dir[512];
+	int fd = -1;
+	int dfd = -1;
+	unsigned int off = 0;
+	struct stat st;
+	char *slash;
+
+	if ((path == 0) || (path[0] == 0) || ((len > 0) && (data == 0)))
+	{
+		return -1;
+	}
+	if (snprintf(tmp, sizeof(tmp), "%s.tmp", path) >= (int)sizeof(tmp))
+	{
+		return -1;
+	}
+
+	if (lstat(tmp, &st) == 0)
+	{
+		if (S_ISDIR(st.st_mode))
+		{
+			return -1;
+		}
+		if (unlink(tmp) != 0)
+		{
+			return -1;
+		}
+	}
+
+	fd = open(tmp, O_WRONLY | O_CREAT | O_EXCL, 0644);
+	if (fd < 0)
+	{
+		return -1;
+	}
+
+	while (off < len)
+	{
+		ssize_t n = write(fd, (const char *)data + off, len - off);
+
+		if (n < 0)
+		{
+			if (errno == EINTR)
+			{
+				continue;
+			}
+			close(fd);
+			unlink(tmp);
+			return -1;
+		}
+		if (n == 0)
+		{
+			close(fd);
+			unlink(tmp);
+			return -1;
+		}
+		off += (unsigned int)n;
+	}
+	if (fsync(fd) != 0)
+	{
+		close(fd);
+		unlink(tmp);
+		return -1;
+	}
+	if (close(fd) != 0)
+	{
+		unlink(tmp);
+		return -1;
+	}
+	if (rename(tmp, path) != 0)
+	{
+		unlink(tmp);
+		return -1;
+	}
+
+	if (snprintf(dir, sizeof(dir), "%s", path) < (int)sizeof(dir))
+	{
+		slash = strrchr(dir, '/');
+		if ((slash != 0) && (slash != dir))
+		{
+			*slash = 0;
+			dfd = open(dir, O_RDONLY);
+			if (dfd >= 0)
+			{
+				fsync(dfd);
+				close(dfd);
+			}
+		}
+	}
+	return 0;
+}
+
 void mywritefile(char create_way, void *full_path_file_name, void *ptr, unsigned int len)
 {
 	int ret = 0;
@@ -132,7 +227,8 @@ void mywritefile(char create_way, void *full_path_file_name, void *ptr, unsigned
 	}
 	if (create_way == 0)
 	{
-		fp = fopen((char *)full_path_file_name, "wb+");
+		durable_write_file((const char *)full_path_file_name, ptr, len);
+		return;
 	}
 	else
 	{
