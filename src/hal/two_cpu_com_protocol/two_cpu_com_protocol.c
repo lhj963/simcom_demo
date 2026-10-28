@@ -1,4 +1,5 @@
 #include "two_cpu_com_protocol.h"
+#include <string.h>
 
 #define TCCP_START_FRAME "\xA5\x5A"
 #define TCCP_START_FRAME0 0xA5

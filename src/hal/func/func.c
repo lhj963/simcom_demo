@@ -1247,7 +1247,8 @@ static int ftp_cred_ok(const char *s)
 	{
 		unsigned char c = (unsigned char)s[i];
 
-		if (c < 0x21 || c > 0x7e)
+		if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+			  c == '.' || c == '_' || c == '-' || c == '+' || c == '@' || c == '%' || c == '#'))
 		{
 			return 0;
 		}

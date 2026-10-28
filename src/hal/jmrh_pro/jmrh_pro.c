@@ -2,6 +2,7 @@
 #include <string.h>
 
 extern unsigned int sm4_dec1(unsigned char sm4_type, void *psrc, unsigned int srclen, void *pOut, unsigned int outbuflen);
+extern void *_find_sub_str(void *pbuf, unsigned int ulBufLen, void *SubStr, unsigned int ulSubStrLen);
 
 
 typedef struct tagJMRH_PROStruction
@@ -120,7 +121,15 @@ static int jmrh_plain_token_ok(const unsigned char *s, unsigned int n, int is_ur
 
     for (i = 0; i < n; i++)
     {
-        if ((s[i] < 0x21) || (s[i] > 0x7e))
+        unsigned char c = s[i];
+        int ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+                 c == '.' || c == '_' || c == '-' || c == '+' || c == '@' || c == '%' || c == '#';
+
+        if (is_url)
+        {
+            ok = ok || c == ':' || c == '/' || c == '?' || c == '&' || c == '=';
+        }
+        if (!ok)
         {
             return 0;
         }

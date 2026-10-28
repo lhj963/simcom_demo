@@ -1,8 +1,11 @@
 #include "box_firmware.h"
+#include <stdio.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+
+extern int durable_write_file(const char *path, const void *data, unsigned int len);
 
 #if 0
 �̼���ʽ����:
