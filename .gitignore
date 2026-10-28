@@ -1,3 +1,24 @@
+# Makefile outputs: bin/demo_app and obj/*.o
 /bin
 /obj
 *.bin
+demo_app
+*.o
+
+# Local static libraries from a build.
+# libs/libsdk.a is the vendor SIMCom SDK archive and must stay tracked.
+# src/lib/*.a are checked-in prebuilt libraries, not Makefile outputs.
+*.a
+!libs/libsdk.a
+!src/lib/*.a
+
+# Editor backups and machine-local VS Code files.
+# Shared .vscode/launch.json, tasks.json, and settings.json stay tracked.
+*~
+*.swp
+*.swo
+*.bak
+.DS_Store
+.vscode/*.code-workspace
+.vscode/.browse.VC.db*
+.vscode/ipch/
