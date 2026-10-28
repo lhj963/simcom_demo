@@ -24,6 +24,17 @@ extern void gpsutc_to_btc(unsigned char *year,unsigned char *month,unsigned char
 
 extern void mywritefile(char create_way,void *full_path_file_name,void *ptr,unsigned int len);
 
+/* Run argv[0] with posix_spawnp (no shell). Returns the exit status, or -1. */
+extern int exec_argv_status(char *const argv[]);
+
+/*
+ * MCU remote command: only `wget -O <fixed path> <url>` is executed, via argv.
+ * Returns 0 after wget exits 0. out_path is a static allowlisted path.
+ * url_out receives the URL. Any other payload is rejected and not executed.
+ */
+extern int mcu_exec_allowlisted_cmd(const void *payload, unsigned int len,
+									const char **out_path, char *url_out, unsigned int url_out_len);
+
 extern unsigned int myreadfile1(void *filename,unsigned int offset,void *pbuf,unsigned int buflen);
 
 extern unsigned int myreadfile(void *filename,void *pbuf,unsigned int buflen);

@@ -1,4 +1,10 @@
 #include "func.h"
+#include <errno.h>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+extern char **environ;
 
 unsigned char is_string(void *ptr, unsigned int len)
 {
@@ -943,6 +949,188 @@ void *QueueGetCurMsg(INT8U Qnum)
 	idx = s_astQ[Qnum].ulRead % s_astQ[Qnum].ulTotalCnt;
 
 	return (INT8U *)(s_astQ[Qnum].ptr) + idx * s_astQ[Qnum].ulOneUnitDataSize;
+}
+
+static int payload_is_shell_text(const unsigned char *p, unsigned int len)
+{
+	unsigned int i;
+
+	for (i = 0; i < len; i++)
+	{
+		unsigned char c = p[i];
+
+		if (c == ' ' || c == '\t')
+		{
+			continue;
+		}
+		if (c < 0x21 || c > 0x7e)
+		{
+			return 0;
+		}
+	}
+	return 1;
+}
+
+static int download_url_token_ok(const char *s)
+{
+	size_t i;
+	size_t n;
+
+	if (s == 0)
+	{
+		return 0;
+	}
+	n = strlen(s);
+	if (n < 8 || n > 320)
+	{
+		return 0;
+	}
+	if (strncmp(s, "ftp://", 6) != 0 && strncmp(s, "http://", 7) != 0 && strncmp(s, "https://", 8) != 0)
+	{
+		return 0;
+	}
+	for (i = 0; i < n; i++)
+	{
+		unsigned char c = (unsigned char)s[i];
+
+		if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+			  c == ':' || c == '/' || c == '.' || c == '-' || c == '_' || c == '~' ||
+			  c == '?' || c == '&' || c == '=' || c == '%' || c == '+' || c == '@'))
+		{
+			return 0;
+		}
+	}
+	return 1;
+}
+
+int exec_argv_status(char *const argv[])
+{
+	pid_t pid;
+	int status = 0;
+	int rc;
+
+	if ((argv == 0) || (argv[0] == 0))
+	{
+		return -1;
+	}
+
+	rc = posix_spawnp(&pid, argv[0], 0, 0, argv, environ);
+	if (rc != 0)
+	{
+		return -1;
+	}
+
+	do
+	{
+		rc = waitpid(pid, &status, 0);
+	} while ((rc < 0) && (errno == EINTR));
+
+	if (rc < 0)
+	{
+		return -1;
+	}
+	if (WIFEXITED(status))
+	{
+		return WEXITSTATUS(status);
+	}
+	return -1;
+}
+
+int mcu_exec_allowlisted_cmd(const void *payload, unsigned int len, const char **out_path, char *url_out, unsigned int url_out_len)
+{
+	static const char *allowed[] = {
+		"/data/mcu.bin",
+		"/data/mpu.bin",
+		"/data/box.bin",
+		"/data/sandian_mcu.zip",
+		"/data/sandian_vcu.zip",
+		"/data/sandian_bms.zip",
+		0};
+	char buf[384 + 1];
+	char *save = 0;
+	char *cursor;
+	char *tok[6];
+	char *argv[6];
+	int ntok = 0;
+	int i;
+	const char *dest = 0;
+
+	if (out_path)
+	{
+		*out_path = 0;
+	}
+	if ((payload == 0) || (len == 0) || (len > 384) || (url_out == 0) || (url_out_len == 0))
+	{
+		return -1;
+	}
+	if (memchr(payload, 0, len))
+	{
+		return -1;
+	}
+	if (payload_is_shell_text((const unsigned char *)payload, len) == 0)
+	{
+		return -1;
+	}
+
+	memcpy(buf, payload, len);
+	buf[len] = 0;
+	cursor = buf;
+	while (ntok < 6)
+	{
+		char *t = strtok_r(cursor, " \t", &save);
+
+		cursor = 0;
+		if (t == 0)
+		{
+			break;
+		}
+		tok[ntok++] = t;
+	}
+	if (ntok != 4)
+	{
+		return -1;
+	}
+	if ((strcmp(tok[0], "wget") != 0) && (strcmp(tok[0], "/usr/bin/wget") != 0))
+	{
+		return -1;
+	}
+	if (strcmp(tok[1], "-O") != 0)
+	{
+		return -1;
+	}
+	for (i = 0; allowed[i]; i++)
+	{
+		if (strcmp(tok[2], allowed[i]) == 0)
+		{
+			dest = allowed[i];
+			break;
+		}
+	}
+	if (dest == 0)
+	{
+		return -1;
+	}
+	if (download_url_token_ok(tok[3]) == 0)
+	{
+		return -1;
+	}
+	snprintf(url_out, url_out_len, "%s", tok[3]);
+
+	argv[0] = "wget";
+	argv[1] = "-O";
+	argv[2] = (char *)dest;
+	argv[3] = "--";
+	argv[4] = url_out;
+	argv[5] = 0;
+	if (exec_argv_status(argv) != 0)
+	{
+		return -1;
+	}
+	if (out_path)
+	{
+		*out_path = dest;
+	}
+	return 0;
 }
 
 // ֪ͨ���� ���ӽ���
